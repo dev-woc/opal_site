@@ -1,0 +1,13 @@
+# Multi-Agent Orchestration Dependencies
+crewai
+langchain
+langchain-openai
+langchain-community
+python-dotenv
+pydantic
+fastapi
+uvicorn
+pytest
+pytest-asyncio
+httpx
+openai
