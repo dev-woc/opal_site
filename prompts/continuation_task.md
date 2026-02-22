@@ -11,12 +11,13 @@ This is a CONTINUATION session. The project has already been initialized.
 ### Step 2: Get Status from Linear (CHECK FOR COMPLETION)
 Delegate to `linear` agent:
 "Read .linear_project.json, then:
-1. Get the latest comment from the META issue (meta_issue_id) for session context
-2. List all issues and count by status (Done/In Progress/Todo) - EXCLUDE META issue from counts
-3. Compare done count to total_issues from .linear_project.json
-4. Return all_complete: true if done == total_issues, false otherwise
-5. If not complete: Get FULL DETAILS of highest-priority issue to work on
-6. Return: status counts, all_complete flag, last session context, and issue context if not complete"
+1. If project_id or meta_issue_id is PENDING_LINEAR_CREATION, resolve them first using project_slug (see your 'Checking Status' instructions for handling PENDING IDs — use GetProject with the slug, then find or create the META issue)
+2. Get the latest comment from the META issue (meta_issue_id) for session context
+3. List all issues and count by status (Done/In Progress/Todo) - EXCLUDE META issue from counts
+4. Compare done count to total_features from .linear_project.json
+5. Return all_complete: true if done == total_features, false otherwise
+6. If not complete: Get FULL DETAILS of highest-priority issue to work on
+7. Return: status counts, all_complete flag, last session context, and issue context if not complete"
 
 **IF all_complete is true:**
 1. Ask linear agent to add "PROJECT COMPLETE" comment to META issue

@@ -118,16 +118,42 @@ When asked to initialize a project:
 When asked to check status, return COMPLETE information:
 
 1. Read `.linear_project.json` to get project info (includes `total_issues` count and `meta_issue_id`)
-2. **Get latest comment from META issue** for session context (use GetIssue with meta_issue_id)
-3. Use `ListIssues` with project filter:
+
+2. **Resolve Project if PENDING:**
+   If `project_id` is "PENDING_LINEAR_CREATION" but `project_slug` exists:
+   ```
+   GetProject:
+     id: [project_slug from .linear_project.json, e.g. "agentic-literacy-pipeline-0fe842a0263b"]
+   ```
+   Update `.linear_project.json` with the real project_id, team_key, team_name from the response.
+
+3. **Resolve META issue if PENDING:**
+   If `meta_issue_id` is "PENDING_LINEAR_CREATION":
+   - Search for it: `ListIssues` with project filter and title containing "[META]"
+   - If found: use that issue ID and update `.linear_project.json`
+   - If not found: create it:
+     ```
+     CreateIssue:
+       team: [team key]
+       project: [project name]
+       title: "[META] Project Progress Tracker"
+       description: "Session tracking issue for agent handoffs"
+     ```
+   - Update `.linear_project.json` with the real meta_issue_id
+
+4. **Get latest comment from META issue** for session context (use GetIssue with resolved meta_issue_id)
+
+5. Use `ListIssues` with project filter:
    ```
    ListIssues:
      project: [project name from .linear_project.json]
    ```
-4. Count issues by status (state field)
+
+6. Count issues by status (state field)
    - **IMPORTANT:** Exclude the META issue from feature counts (it stays in Todo forever)
    - Count only actual feature issues for done/in_progress/todo
-5. **Get FULL DETAILS of highest-priority Todo issue** (if any exist besides META)
+
+7. **Get FULL DETAILS of highest-priority Todo issue** (if any exist besides META)
 
 **Return to orchestrator:**
 ```
