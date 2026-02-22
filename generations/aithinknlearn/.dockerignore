@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+chroma_db/
+screenshots/
+node_modules/
+frontend/node_modules/
+.git/
+*.png
+*.jpg
+*.pdf
