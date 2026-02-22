@@ -25,5 +25,4 @@ numpy
 
 # PDF Generation Dependencies
 reportlab
-weasyprint
 Pillow

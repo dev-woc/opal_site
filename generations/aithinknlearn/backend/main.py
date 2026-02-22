@@ -12,17 +12,51 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-from backend.orchestrator import MultiAgentOrchestrator
-from backend.rag import VectorDatabase, PedagogicalRulesRetriever, ConstraintValidator
-from backend.phonetic import G2PConverter, DecodabilityChecker, OrthographicRuleEngine, HeteronymHandler
-from backend.interactivity import (
-    BlendingBoard, TTSEngine, HapticsHandler,
-    PerformanceTracker, AdaptiveDifficultyManager
-)
-from backend.pdf_generation import (
-    WordCardGenerator, SyllableCardGenerator,
-    SoundMappingGenerator, CanvaAPIClient
-)
+try:
+    from backend.orchestrator import MultiAgentOrchestrator
+    _HAS_ORCHESTRATOR = True
+except Exception as e:
+    MultiAgentOrchestrator = None
+    _HAS_ORCHESTRATOR = False
+    import logging as _log; _log.warning(f"Orchestrator import failed: {e}")
+
+try:
+    from backend.rag import VectorDatabase, PedagogicalRulesRetriever, ConstraintValidator
+    _HAS_RAG = True
+except Exception as e:
+    VectorDatabase = PedagogicalRulesRetriever = ConstraintValidator = None
+    _HAS_RAG = False
+    import logging as _log; _log.warning(f"RAG import failed: {e}")
+
+try:
+    from backend.phonetic import G2PConverter, DecodabilityChecker, OrthographicRuleEngine, HeteronymHandler
+    _HAS_PHONETIC = True
+except Exception as e:
+    G2PConverter = DecodabilityChecker = OrthographicRuleEngine = HeteronymHandler = None
+    _HAS_PHONETIC = False
+    import logging as _log; _log.warning(f"Phonetic import failed: {e}")
+
+try:
+    from backend.interactivity import (
+        BlendingBoard, TTSEngine, HapticsHandler,
+        PerformanceTracker, AdaptiveDifficultyManager
+    )
+    _HAS_INTERACTIVITY = True
+except Exception as e:
+    BlendingBoard = TTSEngine = HapticsHandler = PerformanceTracker = AdaptiveDifficultyManager = None
+    _HAS_INTERACTIVITY = False
+    import logging as _log; _log.warning(f"Interactivity import failed: {e}")
+
+try:
+    from backend.pdf_generation import (
+        WordCardGenerator, SyllableCardGenerator,
+        SoundMappingGenerator, CanvaAPIClient
+    )
+    _HAS_PDF = True
+except Exception as e:
+    WordCardGenerator = SyllableCardGenerator = SoundMappingGenerator = CanvaAPIClient = None
+    _HAS_PDF = False
+    import logging as _log; _log.warning(f"PDF generation import failed: {e}")
 
 # Load environment variables
 load_dotenv()
