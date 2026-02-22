@@ -7,7 +7,7 @@ prescriptive teaching focuses following Structured Literacy principles.
 
 import logging
 from typing import Dict, List, Any, Optional, Tuple
-from crewai import Agent, Task
+from crewai import Agent, Task, Crew
 from langchain_openai import ChatOpenAI
 
 logger = logging.getLogger(__name__)
@@ -113,7 +113,12 @@ Be specific and evidence-based. Reference Structured Literacy principles.""",
         )
 
         # Execute task
-        analysis_text = task.execute()
+        crew = Crew(
+            agents=[self.agent],
+            tasks=[task],
+            verbose=True
+        )
+        analysis_text = crew.kickoff()
 
         # Parse analysis into structured format
         analysis = {

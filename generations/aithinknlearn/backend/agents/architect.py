@@ -7,7 +7,7 @@ ensuring high decodability rates (95%+) for Structured Literacy instruction.
 
 import logging
 from typing import Dict, List, Any, Optional
-from crewai import Agent, Task
+from crewai import Agent, Task, Crew
 from langchain_openai import ChatOpenAI
 
 logger = logging.getLogger(__name__)
@@ -114,7 +114,12 @@ Generate the story now.""",
         )
 
         # Execute task
-        story_text = task.execute()
+        crew = Crew(
+            agents=[self.agent],
+            tasks=[task],
+            verbose=True
+        )
+        story_text = crew.kickoff()
 
         # Analyze story
         story_data = {

@@ -8,7 +8,7 @@ UFLI Foundations, FCRR).
 
 import logging
 from typing import Dict, List, Any, Optional
-from crewai import Agent, Task
+from crewai import Agent, Task, Crew
 from langchain_openai import ChatOpenAI
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,12 @@ Ensure 95% decodability by limiting to allowed phonemes.""",
         )
 
         # Execute task
-        result = task.execute()
+        crew = Crew(
+            agents=[self.agent],
+            tasks=[task],
+            verbose=True
+        )
+        result = crew.kickoff()
 
         # Parse result into structured format
         lesson_plan = {
