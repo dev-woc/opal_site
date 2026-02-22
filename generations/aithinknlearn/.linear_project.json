@@ -1,0 +1,97 @@
+{
+  "initialized": true,
+  "created_at": "2026-02-22",
+  "project_name": "Agentic Literacy Pipeline",
+  "project_id": "PENDING_LINEAR_CREATION",
+  "meta_issue_id": "PENDING_LINEAR_CREATION",
+  "team_name": "PENDING_TEAM_SELECTION",
+  "team_key": "PENDING_TEAM_KEY",
+  "total_features": 5,
+  "created_issues": [
+    {
+      "number": 1,
+      "id": "PENDING_LINEAR_CREATION",
+      "title": "Feature 1: Multi-Agent Orchestration",
+      "status": "Todo",
+      "priority": "High",
+      "description": "Implement the core multi-agent orchestration system with Curriculum Planner, Narrative Architect, and Diagnostic Specialist agents sharing a unified scratchpad.\n\nFeature Description:\nThe system uses LangChain or CrewAI to orchestrate three specialized agents:\n1. Curriculum Planner: Decomposes learning objectives into structured lesson plans\n2. Narrative Architect: Generates engaging stories using strictly allowed phonemes\n3. Diagnostic Specialist: Analyzes student errors to suggest prescriptive teaching focuses\n\nAll agents share a 'scratchpad' or conversation history for unified state management and decision-making.",
+      "test_steps": [
+        "Initialize the orchestration system with CrewAI or LangChain",
+        "Verify the Curriculum Planner agent can decompose a sample learning objective into lesson plan steps",
+        "Verify the Narrative Architect agent can generate a story snippet using only allowed phonemes",
+        "Verify the Diagnostic Specialist agent can analyze sample student error patterns and suggest teaching focuses",
+        "Verify agents can access and update the shared scratchpad/conversation history",
+        "Test state consistency across all three agents when one updates the scratchpad",
+        "Verify logging captures all agent decisions and state changes for teacher review"
+      ]
+    },
+    {
+      "number": 2,
+      "id": "PENDING_LINEAR_CREATION",
+      "title": "Feature 2: RAG-Powered Pedagogical Grounding",
+      "status": "Todo",
+      "priority": "High",
+      "description": "Implement Retrieval-Augmented Generation (RAG) system to ground outputs in validated science using Wilson Reading System, Orton-Gillingham, UFLI Foundations, and FCRR documentation.\n\nFeature Description:\nThe system ensures all generated content adheres to evidence-based literacy instruction by:\n1. Retrieving specific rules from Structured Literacy documentation rather than relying on broad LLM knowledge\n2. Pulling required word lists and activity data directly from the FCRR resource database\n3. Using GPT-4o with strict RAG constraints to maintain pedagogical accuracy\n4. Embedding rules from WRS, OG, and UFLI into a vector database for rapid retrieval",
+      "test_steps": [
+        "Set up vector database with embedded rules from Wilson Reading System, Orton-Gillingham, UFLI, and FCRR documentation",
+        "Test RAG retrieval returns correct phonetic rules for a sample grapheme pattern",
+        "Test word list retrieval from FCRR database returns grade-appropriate vocabulary",
+        "Verify GPT-4o respects RAG-constrained outputs (does not generate conflicting content)",
+        "Test that non-compliant suggestions are rejected before reaching output",
+        "Verify retrieval system can handle edge cases like heteronyms with proper UFLI context",
+        "Confirm all retrieved references include source citations for teacher accountability"
+      ]
+    },
+    {
+      "number": 3,
+      "id": "PENDING_LINEAR_CREATION",
+      "title": "Feature 3: Automated Phonetic Verification",
+      "status": "Todo",
+      "priority": "High",
+      "description": "Implement automated phonetic verification using Grapheme-to-Phoneme (G2P) conversion, decodability checking, and orthographic rule validation.\n\nFeature Description:\nThe system maintains reading content quality through:\n1. G2P conversion using NVIDIA NeMo (G2P-Conformer) and CMU Pronouncing Dictionary\n2. Decomposing every word into constituent phonemes to distinguish heteronyms\n3. Maintaining a 95% decodability rate to prevent student guessing or reliance on cueing systems\n4. Enforcing orthographic rules including 1-1-1 doubling rule, Y-to-I changes, and silent e patterns",
+      "test_steps": [
+        "Set up NVIDIA NeMo G2P-Conformer with CMU Pronouncing Dictionary integration",
+        "Test G2P conversion on sample words returns correct phoneme sequences",
+        "Test heteronym handling: verify 'read' (present) and 'read' (past) produce different phoneme outputs",
+        "Generate a sample lesson text and verify decodability calculation equals or exceeds 95%",
+        "Test orthographic rule enforcement: verify 1-1-1 doubling rule (CVC + suffix) works correctly",
+        "Test Y-to-I transformation validation in words like 'happy' + 'ness'",
+        "Verify system rejects or flags content that falls below 95% decodability threshold"
+      ]
+    },
+    {
+      "number": 4,
+      "id": "PENDING_LINEAR_CREATION",
+      "title": "Feature 4: Digital Interactivity & Gamification",
+      "status": "Todo",
+      "priority": "High",
+      "description": "Implement digital interactivity features including virtual blending boards, Text-to-Speech feedback, mobile haptics, and adaptive difficulty gamification.\n\nFeature Description:\nThe system provides multi-modal learning experiences through:\n1. Virtual blending boards where students drag letter tiles and receive high-quality TTS auditory feedback\n2. Mobile haptic tapping that provides subtle vibrations to replicate multisensory sound segmenting\n3. Adaptive gamification loops that adjust difficulty in real-time (e.g., triggering multisyllabic 'boss levels')\n4. Real-time performance tracking to inform difficulty adjustments",
+      "test_steps": [
+        "Create a virtual blending board UI component with draggable letter tiles",
+        "Test TTS integration: verify clicking a letter produces correct phoneme audio at appropriate volume",
+        "Test blending board interaction: drag letters to form a word, verify audio feedback plays blended sound",
+        "Implement haptic feedback for mobile devices and test vibration on letter tap",
+        "Create adaptive difficulty system that tracks student performance metrics",
+        "Test difficulty escalation: verify 'boss level' (multisyllabic words) triggers after successful simple blends",
+        "Verify gamification feedback (points, visual effects, level progression) displays correctly and updates in real-time"
+      ]
+    },
+    {
+      "number": 5,
+      "id": "PENDING_LINEAR_CREATION",
+      "title": "Feature 5: Programmatic Print Generation",
+      "status": "Todo",
+      "priority": "High",
+      "description": "Implement programmatic PDF generation for high-fidelity print materials including word cards, syllable cards, and sound mapping boxes.\n\nFeature Description:\nThe system automates print production to support handwriting practice and reduce screen fatigue through:\n1. ReportLab for pixel-precise layout of word cards, syllable cards, and sound mapping boxes\n2. WeasyPrint for complex HTML-to-PDF conversion with advanced styling\n3. Canva API integration to suggest layouts and generate visually engaging worksheet templates\n4. FCRR color-coded structure implementation (Purple for Phonological Awareness, Orange for Phonics, Green for Vocabulary)",
+      "test_steps": [
+        "Set up ReportLab environment and create a basic word card template with correct typography",
+        "Generate a sample PDF with ReportLab containing 10 word cards with phonetic notation",
+        "Verify PDF output includes proper spacing, font sizes, and alignment for printing",
+        "Test syllable card generation with visual syllable division indicators",
+        "Implement sound mapping box layout with columns for graphemes and rows for phonemes",
+        "Integrate Canva API and test template suggestion for a sample grade level",
+        "Generate a complete worksheet PDF with FCRR color-coding and verify print quality at 300 DPI"
+      ]
+    }
+  ]
+}
