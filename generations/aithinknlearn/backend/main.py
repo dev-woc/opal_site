@@ -19,6 +19,10 @@ from backend.interactivity import (
     BlendingBoard, TTSEngine, HapticsHandler,
     PerformanceTracker, AdaptiveDifficultyManager
 )
+from backend.pdf_generation import (
+    WordCardGenerator, SyllableCardGenerator,
+    SoundMappingGenerator, CanvaAPIClient
+)
 
 # Load environment variables
 load_dotenv()
@@ -63,6 +67,12 @@ tts_engine = None
 haptics_handler = None
 performance_tracker = None
 difficulty_manager = None
+
+# Initialize PDF generation system
+word_card_gen = None
+syllable_card_gen = None
+sound_mapping_gen = None
+canva_client = None
 
 
 # Request/Response Models
@@ -138,37 +148,71 @@ async def startup_event():
     global orchestrator, rag_retriever, constraint_validator
     global g2p_converter, decodability_checker, orthographic_engine, heteronym_handler
     global blending_board, tts_engine, haptics_handler, performance_tracker, difficulty_manager
+    global word_card_gen, syllable_card_gen, sound_mapping_gen, canva_client
     logger.info("Starting Multi-Agent Orchestration System")
 
     api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        logger.warning("OPENAI_API_KEY not found in environment. Agent functionality will be limited.")
-
-    orchestrator = MultiAgentOrchestrator(openai_api_key=api_key)
-    logger.info("Orchestrator initialized successfully")
+    if not api_key or api_key.startswith("sk-test"):
+        logger.warning("OPENAI_API_KEY not found or is test key. Agent functionality will be limited.")
+        orchestrator = None
+    else:
+        try:
+            orchestrator = MultiAgentOrchestrator(openai_api_key=api_key)
+            logger.info("Orchestrator initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize orchestrator: {e}")
+            orchestrator = None
 
     # Initialize RAG system
-    logger.info("Initializing RAG system")
-    rag_retriever = PedagogicalRulesRetriever()
-    constraint_validator = ConstraintValidator()
-    logger.info("RAG system initialized successfully")
+    try:
+        logger.info("Initializing RAG system")
+        rag_retriever = PedagogicalRulesRetriever()
+        constraint_validator = ConstraintValidator()
+        logger.info("RAG system initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize RAG system: {e}")
+        rag_retriever = None
+        constraint_validator = None
 
     # Initialize phonetic verification system
-    logger.info("Initializing Phonetic Verification System")
-    g2p_converter = G2PConverter()
-    decodability_checker = DecodabilityChecker()
-    orthographic_engine = OrthographicRuleEngine()
-    heteronym_handler = HeteronymHandler()
-    logger.info("Phonetic Verification System initialized successfully")
+    try:
+        logger.info("Initializing Phonetic Verification System")
+        g2p_converter = G2PConverter()
+        decodability_checker = DecodabilityChecker()
+        orthographic_engine = OrthographicRuleEngine()
+        heteronym_handler = HeteronymHandler()
+        logger.info("Phonetic Verification System initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize phonetic system: {e}")
+        g2p_converter = None
+        decodability_checker = None
+        orthographic_engine = None
+        heteronym_handler = None
 
     # Initialize interactivity system
-    logger.info("Initializing Digital Interactivity & Gamification System")
-    blending_board = BlendingBoard()
-    tts_engine = TTSEngine()
-    haptics_handler = HapticsHandler()
-    performance_tracker = PerformanceTracker()
-    difficulty_manager = AdaptiveDifficultyManager()
-    logger.info("Digital Interactivity System initialized successfully")
+    try:
+        logger.info("Initializing Digital Interactivity & Gamification System")
+        blending_board = BlendingBoard()
+        tts_engine = TTSEngine()
+        haptics_handler = HapticsHandler()
+        performance_tracker = PerformanceTracker()
+        difficulty_manager = AdaptiveDifficultyManager()
+        logger.info("Digital Interactivity System initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize interactivity system: {e}")
+        blending_board = None
+        tts_engine = None
+        haptics_handler = None
+        performance_tracker = None
+        difficulty_manager = None
+
+    # Initialize PDF generation system
+    logger.info("Initializing PDF Generation System")
+    word_card_gen = WordCardGenerator(dpi=300)
+    syllable_card_gen = SyllableCardGenerator(dpi=300)
+    sound_mapping_gen = SoundMappingGenerator(dpi=300)
+    canva_client = CanvaAPIClient()
+    logger.info("PDF Generation System initialized successfully")
 
 
 @app.get("/")
@@ -1205,6 +1249,171 @@ async def get_interactivity_stats() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Error getting interactivity stats: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# PDF Generation Endpoints
+
+class WordCardRequest(BaseModel):
+    words: List[Dict[str, str]]
+    category: Optional[str] = "phonics"
+
+
+class SyllableCardRequest(BaseModel):
+    words: List[Dict[str, Any]]
+    category: Optional[str] = "phonological"
+
+
+class SoundMappingRequest(BaseModel):
+    words: List[Dict[str, Any]]
+    category: Optional[str] = "phonics"
+
+
+class TemplateRequest(BaseModel):
+    grade_level: str
+    activity_type: str
+
+
+@app.post("/api/pdf/generate-word-cards")
+async def generate_word_cards_pdf(request: WordCardRequest):
+    """Generate PDF with word cards"""
+    if word_card_gen is None:
+        raise HTTPException(status_code=500, detail="PDF generator not initialized")
+
+    try:
+        logger.info(f"Generating word cards PDF with {len(request.words)} words")
+        pdf_bytes = word_card_gen.generate_word_cards(request.words, request.category)
+
+        from fastapi.responses import Response
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=word_cards_{request.category}.pdf"
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error generating word cards PDF: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/pdf/generate-syllable-cards")
+async def generate_syllable_cards_pdf(request: SyllableCardRequest):
+    """Generate PDF with syllable cards"""
+    if syllable_card_gen is None:
+        raise HTTPException(status_code=500, detail="PDF generator not initialized")
+
+    try:
+        logger.info(f"Generating syllable cards PDF with {len(request.words)} words")
+        pdf_bytes = syllable_card_gen.generate_syllable_cards(request.words, request.category)
+
+        from fastapi.responses import Response
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=syllable_cards_{request.category}.pdf"
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error generating syllable cards PDF: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/pdf/generate-sound-mapping")
+async def generate_sound_mapping_pdf(request: SoundMappingRequest):
+    """Generate PDF with sound mapping boxes"""
+    if sound_mapping_gen is None:
+        raise HTTPException(status_code=500, detail="PDF generator not initialized")
+
+    try:
+        logger.info(f"Generating sound mapping PDF with {len(request.words)} words")
+        pdf_bytes = sound_mapping_gen.generate_sound_mapping_worksheet(request.words, request.category)
+
+        from fastapi.responses import Response
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=sound_mapping_{request.category}.pdf"
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error generating sound mapping PDF: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/pdf/canva-templates")
+async def get_canva_templates(request: TemplateRequest) -> Dict[str, Any]:
+    """Get Canva template suggestions"""
+    if canva_client is None:
+        raise HTTPException(status_code=500, detail="Canva client not initialized")
+
+    try:
+        logger.info(f"Getting Canva templates for {request.grade_level} {request.activity_type}")
+        templates = canva_client.suggest_templates(request.grade_level, request.activity_type)
+
+        return {
+            "success": True,
+            "data": {
+                "templates": templates,
+                "count": len(templates),
+                "grade_level": request.grade_level,
+                "activity_type": request.activity_type
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Canva templates: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/pdf/canva-colors/{category}")
+async def get_canva_color_scheme(category: str) -> Dict[str, Any]:
+    """Get FCRR color scheme for category"""
+    if canva_client is None:
+        raise HTTPException(status_code=500, detail="Canva client not initialized")
+
+    try:
+        color_scheme = canva_client.get_color_scheme(category)
+
+        return {
+            "success": True,
+            "data": {
+                "category": category,
+                "color_scheme": color_scheme
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting color scheme: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/pdf/stats")
+async def get_pdf_stats() -> Dict[str, Any]:
+    """Get PDF generation system statistics"""
+    if word_card_gen is None:
+        raise HTTPException(status_code=500, detail="PDF system not initialized")
+
+    try:
+        return {
+            "success": True,
+            "data": {
+                "dpi": word_card_gen.dpi,
+                "page_size": f"{word_card_gen.width} x {word_card_gen.height}",
+                "supported_categories": ["phonological", "phonics", "vocabulary", "fluency", "comprehension"],
+                "card_types": ["word_cards", "syllable_cards", "sound_mapping"],
+                "canva_integration": "enabled",
+                "system_status": "operational"
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting PDF stats: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

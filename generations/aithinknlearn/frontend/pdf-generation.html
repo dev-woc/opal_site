@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Generation - Print Materials</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .badge-purple { background: #9B59B6; color: white; }
+        .badge-orange { background: #E67E22; color: white; }
+        .badge-green { background: #27AE60; color: white; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .button-secondary {
+            background: #27AE60;
+        }
+
+        .button-orange {
+            background: #E67E22;
+        }
+
+        .button-purple {
+            background: #9B59B6;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .template-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .template-card h4 {
+            color: #333;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .template-card p {
+            color: #666;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .select-group {
+            margin-bottom: 15px;
+        }
+
+        .select-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .select-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .color-preview {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PDF Generation - Print Materials</h1>
+            <p>ReportLab + WeasyPrint + Canva API Integration</p>
+            <div>
+                <span class="badge badge-purple">Phonological Awareness</span>
+                <span class="badge badge-orange">Phonics</span>
+                <span class="badge badge-green">Vocabulary</span>
+            </div>
+        </div>
+
+        <div id="status-message"></div>
+
+        <div class="grid">
+            <!-- Word Cards -->
+            <div class="card">
+                <h2>Word Cards</h2>
+                <p>Generate printable word cards with phonetic notation and FCRR color-coding. 300 DPI print quality.</p>
+
+                <div class="select-group">
+                    <label>Category:</label>
+                    <select id="word-category">
+                        <option value="phonics">Phonics (Orange)</option>
+                        <option value="phonological">Phonological (Purple)</option>
+                        <option value="vocabulary">Vocabulary (Green)</option>
+                    </select>
+                </div>
+
+                <button class="button button-orange" onclick="generateWordCards()">
+                    Generate Word Cards PDF
+                </button>
+                <button class="button button-secondary" onclick="previewWordCards()">
+                    Preview Sample
+                </button>
+            </div>
+
+            <!-- Syllable Cards -->
+            <div class="card">
+                <h2>Syllable Cards</h2>
+                <p>Create syllable division cards with visual syllable markers for phonological awareness practice.</p>
+
+                <div class="select-group">
+                    <label>Category:</label>
+                    <select id="syllable-category">
+                        <option value="phonological">Phonological (Purple)</option>
+                        <option value="phonics">Phonics (Orange)</option>
+                    </select>
+                </div>
+
+                <button class="button button-purple" onclick="generateSyllableCards()">
+                    Generate Syllable Cards PDF
+                </button>
+                <button class="button button-secondary" onclick="previewSyllableCards()">
+                    Preview Sample
+                </button>
+            </div>
+
+            <!-- Sound Mapping Boxes -->
+            <div class="card">
+                <h2>Sound Mapping Boxes</h2>
+                <p>Generate Elkonin boxes for grapheme-phoneme mapping practice with structured layout.</p>
+
+                <div class="select-group">
+                    <label>Category:</label>
+                    <select id="mapping-category">
+                        <option value="phonics">Phonics (Orange)</option>
+                        <option value="phonological">Phonological (Purple)</option>
+                    </select>
+                </div>
+
+                <button class="button button-orange" onclick="generateSoundMapping()">
+                    Generate Sound Mapping PDF
+                </button>
+                <button class="button button-secondary" onclick="previewSoundMapping()">
+                    Preview Sample
+                </button>
+            </div>
+        </div>
+
+        <!-- Canva Integration -->
+        <div class="card">
+            <h2>Canva Template Suggestions</h2>
+            <p>Get AI-powered template suggestions for your grade level and activity type.</p>
+
+            <div class="grid">
+                <div class="select-group">
+                    <label>Grade Level:</label>
+                    <select id="canva-grade">
+                        <option value="kindergarten">Kindergarten</option>
+                        <option value="grade1">Grade 1</option>
+                        <option value="grade2">Grade 2</option>
+                    </select>
+                </div>
+
+                <div class="select-group">
+                    <label>Activity Type:</label>
+                    <select id="canva-activity">
+                        <option value="word_cards">Word Cards</option>
+                        <option value="syllable_cards">Syllable Cards</option>
+                        <option value="worksheet">Worksheets</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="button" onclick="getCanvaTemplates()">
+                Get Template Suggestions
+            </button>
+
+            <div id="template-results"></div>
+        </div>
+
+        <!-- FCRR Color Schemes -->
+        <div class="card">
+            <h2>FCRR Color Schemes</h2>
+            <p>Color-coding system for literacy categories.</p>
+
+            <button class="button" onclick="showColorSchemes()">
+                View All Color Schemes
+            </button>
+
+            <div id="color-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.className = `status status-${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Sample data
+        const sampleWords = [
+            { word: 'cat', phonemes: 'k æ t' },
+            { word: 'dog', phonemes: 'd ɔ g' },
+            { word: 'fish', phonemes: 'f ɪ ʃ' },
+            { word: 'bat', phonemes: 'b æ t' },
+            { word: 'mat', phonemes: 'm æ t' },
+            { word: 'sat', phonemes: 's æ t' },
+            { word: 'hat', phonemes: 'h æ t' },
+            { word: 'rat', phonemes: 'r æ t' },
+            { word: 'pat', phonemes: 'p æ t' },
+            { word: 'fat', phonemes: 'f æ t' }
+        ];
+
+        const sampleSyllableWords = [
+            { word: 'basket', syllables: ['bas', 'ket'] },
+            { word: 'happy', syllables: ['hap', 'py'] },
+            { word: 'sunset', syllables: ['sun', 'set'] },
+            { word: 'rabbit', syllables: ['rab', 'bit'] },
+            { word: 'kitten', syllables: ['kit', 'ten'] },
+            { word: 'napkin', syllables: ['nap', 'kin'] },
+            { word: 'picnic', syllables: ['pic', 'nic'] },
+            { word: 'button', syllables: ['but', 'ton'] }
+        ];
+
+        const sampleMappingWords = [
+            { word: 'cat', graphemes: ['c', 'a', 't'], phonemes: ['k', 'æ', 't'] },
+            { word: 'ship', graphemes: ['sh', 'i', 'p'], phonemes: ['ʃ', 'ɪ', 'p'] },
+            { word: 'fish', graphemes: ['f', 'i', 'sh'], phonemes: ['f', 'ɪ', 'ʃ'] },
+            { word: 'chop', graphemes: ['ch', 'o', 'p'], phonemes: ['ʧ', 'ɑ', 'p'] },
+            { word: 'bath', graphemes: ['b', 'a', 'th'], phonemes: ['b', 'æ', 'θ'] }
+        ];
+
+        async function generateWordCards() {
+            const category = document.getElementById('word-category').value;
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = 'Generating PDF...<span class="loading"></span>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/pdf/generate-word-cards`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        words: sampleWords,
+                        category: category
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `word_cards_${category}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+
+                    showStatus(`Word cards PDF generated successfully! (${sampleWords.length} cards)`, 'success');
+                } else {
+                    showStatus('Error generating PDF', 'error');
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'Generate Word Cards PDF';
+        }
+
+        async function generateSyllableCards() {
+            const category = document.getElementById('syllable-category').value;
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = 'Generating PDF...<span class="loading"></span>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/pdf/generate-syllable-cards`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        words: sampleSyllableWords,
+                        category: category
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `syllable_cards_${category}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+
+                    showStatus(`Syllable cards PDF generated successfully! (${sampleSyllableWords.length} cards)`, 'success');
+                } else {
+                    showStatus('Error generating PDF', 'error');
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'Generate Syllable Cards PDF';
+        }
+
+        async function generateSoundMapping() {
+            const category = document.getElementById('mapping-category').value;
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = 'Generating PDF...<span class="loading"></span>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/pdf/generate-sound-mapping`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        words: sampleMappingWords,
+                        category: category
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `sound_mapping_${category}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+
+                    showStatus(`Sound mapping worksheet generated successfully! (${sampleMappingWords.length} words)`, 'success');
+                } else {
+                    showStatus('Error generating PDF', 'error');
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'Generate Sound Mapping PDF';
+        }
+
+        async function getCanvaTemplates() {
+            const grade = document.getElementById('canva-grade').value;
+            const activity = document.getElementById('canva-activity').value;
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = 'Loading Templates...<span class="loading"></span>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/pdf/canva-templates`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        grade_level: grade,
+                        activity_type: activity
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const resultsDiv = document.getElementById('template-results');
+                    resultsDiv.innerHTML = '<div class="template-grid">';
+
+                    data.data.templates.forEach(template => {
+                        resultsDiv.innerHTML += `
+                            <div class="template-card">
+                                <h4>${template.name}</h4>
+                                <p>${template.description}</p>
+                                <p style="margin-top: 8px; font-size: 0.8rem;">Features: ${template.features.join(', ')}</p>
+                            </div>
+                        `;
+                    });
+
+                    resultsDiv.innerHTML += '</div>';
+                    showStatus(`Found ${data.data.count} template suggestions`, 'success');
+                } else {
+                    showStatus('Error loading templates', 'error');
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'Get Template Suggestions';
+        }
+
+        async function showColorSchemes() {
+            const categories = ['phonological', 'phonics', 'vocabulary', 'fluency', 'comprehension'];
+            const resultsDiv = document.getElementById('color-results');
+            resultsDiv.innerHTML = '<div style="margin-top: 20px;">';
+
+            for (const category of categories) {
+                try {
+                    const response = await fetch(`${API_URL}/api/pdf/canva-colors/${category}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const scheme = data.data.color_scheme;
+                        resultsDiv.innerHTML += `
+                            <div style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                <h4 style="text-transform: capitalize; margin-bottom: 10px;">${category}</h4>
+                                <div>
+                                    <span class="color-preview" style="background: ${scheme.primary}"></span>
+                                    <strong>Primary:</strong> ${scheme.primary}
+                                </div>
+                                <div style="margin-top: 5px;">
+                                    <span class="color-preview" style="background: ${scheme.secondary}"></span>
+                                    <strong>Secondary:</strong> ${scheme.secondary}
+                                </div>
+                                <div style="margin-top: 5px;">
+                                    <span class="color-preview" style="background: ${scheme.accent}"></span>
+                                    <strong>Accent:</strong> ${scheme.accent}
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error(`Error loading ${category} colors:`, error);
+                }
+            }
+
+            resultsDiv.innerHTML += '</div>';
+            showStatus('Loaded all FCRR color schemes', 'success');
+        }
+
+        function previewWordCards() {
+            showStatus('Word cards preview: 10 CVC words with phonetic notation in orange (phonics)', 'info');
+        }
+
+        function previewSyllableCards() {
+            showStatus('Syllable cards preview: 8 two-syllable words with visual division markers', 'info');
+        }
+
+        function previewSoundMapping() {
+            showStatus('Sound mapping preview: 5 words with grapheme-phoneme Elkonin boxes', 'info');
+        }
+
+        // Check API on load
+        async function checkAPI() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    showStatus('PDF Generation System Ready - 300 DPI Print Quality', 'success');
+                }
+            } catch (error) {
+                showStatus('Backend not connected. Start server: python backend/main.py', 'error');
+            }
+        }
+
+        checkAPI();
+    </script>
+</body>
+</html>

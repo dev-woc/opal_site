@@ -22,3 +22,8 @@ numpy
 # nemo_toolkit[asr]
 # cmudict (CMU Pronouncing Dictionary)
 # For now, using built-in dictionaries and rule-based conversion
+
+# PDF Generation Dependencies
+reportlab
+weasyprint
+Pillow
