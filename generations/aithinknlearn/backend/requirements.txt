@@ -13,9 +13,10 @@ httpx
 openai
 
 # RAG System Dependencies
-chromadb
-sentence-transformers
+chromadb>=1.0.0
 numpy
+# sentence-transformers requires PyTorch (~1.5GB) which OOMs Railway
+# ChromaDB uses its built-in ONNX embeddings as fallback
 
 # Phonetic Verification Dependencies
 # Note: For production, add NVIDIA NeMo for G2P-Conformer model

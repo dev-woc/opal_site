@@ -8,7 +8,6 @@ using ChromaDB with sentence embeddings.
 import logging
 from typing import List, Dict, Any, Optional
 import chromadb
-from chromadb.config import Settings
 
 try:
     from sentence_transformers import SentenceTransformer
@@ -39,11 +38,8 @@ class VectorDatabase:
         import os
         os.environ["CHROMA_CACHE_DIR"] = os.path.join(persist_directory, ".cache")
 
-        # Initialize ChromaDB client
-        self.client = chromadb.Client(Settings(
-            persist_directory=persist_directory,
-            anonymized_telemetry=False
-        ))
+        # Initialize ChromaDB client (chromadb 1.x API)
+        self.client = chromadb.PersistentClient(path=persist_directory)
 
         # Initialize embedding model
         if HAS_SENTENCE_TRANSFORMERS:

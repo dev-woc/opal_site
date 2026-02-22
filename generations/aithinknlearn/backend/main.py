@@ -241,12 +241,19 @@ async def startup_event():
         difficulty_manager = None
 
     # Initialize PDF generation system
-    logger.info("Initializing PDF Generation System")
-    word_card_gen = WordCardGenerator(dpi=300)
-    syllable_card_gen = SyllableCardGenerator(dpi=300)
-    sound_mapping_gen = SoundMappingGenerator(dpi=300)
-    canva_client = CanvaAPIClient()
-    logger.info("PDF Generation System initialized successfully")
+    try:
+        logger.info("Initializing PDF Generation System")
+        word_card_gen = WordCardGenerator(dpi=300)
+        syllable_card_gen = SyllableCardGenerator(dpi=300)
+        sound_mapping_gen = SoundMappingGenerator(dpi=300)
+        canva_client = CanvaAPIClient()
+        logger.info("PDF Generation System initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize PDF generation system: {e}")
+        word_card_gen = None
+        syllable_card_gen = None
+        sound_mapping_gen = None
+        canva_client = None
 
 
 @app.get("/")
