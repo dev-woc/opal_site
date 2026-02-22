@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG-Powered Pedagogical Grounding - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .rule-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .rule-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .rule-text {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .metadata {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge.source {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge.category {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .badge.citation {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .badge.grade {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .validation-result {
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .validation-result.valid {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+
+        .validation-result.invalid {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+
+        .validation-result h3 {
+            margin-bottom: 10px;
+        }
+
+        .validation-result.valid h3 {
+            color: #2e7d32;
+        }
+
+        .validation-result.invalid h3 {
+            color: #c62828;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+
+        .word-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .word-tag {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RAG-Powered Pedagogical Grounding</h1>
+        <p class="subtitle">Evidence-based literacy instruction using WRS, OG, UFLI, and FCRR</p>
+
+        <!-- Section 1: Retrieve Pedagogical Rules -->
+        <div class="section">
+            <h2>1. Retrieve Pedagogical Rules</h2>
+            <div class="input-group">
+                <label for="ruleQuery">Query (e.g., "short vowel rules", "syllable types"):</label>
+                <input type="text" id="ruleQuery" value="short vowel sounds in CVC words">
+            </div>
+            <div class="input-group">
+                <label for="sourceFilter">Filter by Source:</label>
+                <select id="sourceFilter">
+                    <option value="">All Sources</option>
+                    <option value="WRS">Wilson Reading System (WRS)</option>
+                    <option value="OG">Orton-Gillingham (OG)</option>
+                    <option value="UFLI">UFLI Foundations</option>
+                    <option value="FCRR">FCRR</option>
+                </select>
+            </div>
+            <button onclick="retrieveRules()">Retrieve Rules</button>
+            <div id="rulesResults" class="results" style="display: none;"></div>
+        </div>
+
+        <!-- Section 2: Get Word Lists -->
+        <div class="section">
+            <h2>2. FCRR Word List Retrieval</h2>
+            <div class="input-group">
+                <label for="gradeLevel">Select Grade Level:</label>
+                <select id="gradeLevel">
+                    <option value="kindergarten">Kindergarten</option>
+                    <option value="grade1">Grade 1</option>
+                    <option value="grade2">Grade 2</option>
+                    <option value="grade3">Grade 3</option>
+                </select>
+            </div>
+            <button onclick="getWordList()">Get Word List</button>
+            <div id="wordListResults" class="results" style="display: none;"></div>
+        </div>
+
+        <!-- Section 3: Validate Decodability -->
+        <div class="section">
+            <h2>3. Validate Text Decodability</h2>
+            <div class="input-group">
+                <label for="textToValidate">Text to Validate:</label>
+                <textarea id="textToValidate">The cat sat on the mat and ran to the den.</textarea>
+            </div>
+            <div class="input-group">
+                <label for="allowedPhonemes">Allowed Phonemes (comma-separated):</label>
+                <input type="text" id="allowedPhonemes" value="cvc, short_vowels">
+            </div>
+            <button onclick="validateDecodability()">Validate Decodability</button>
+            <div id="validationResults" class="results" style="display: none;"></div>
+        </div>
+
+        <!-- Section 4: RAG System Stats -->
+        <div class="section">
+            <h2>4. RAG System Statistics</h2>
+            <button onclick="getRAGStats()">Get System Stats</button>
+            <div id="statsResults" class="results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        async function retrieveRules() {
+            const query = document.getElementById('ruleQuery').value;
+            const sourceFilter = document.getElementById('sourceFilter').value;
+            const resultsDiv = document.getElementById('rulesResults');
+
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading">Retrieving rules...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/rag/retrieve-rules`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        n_results: 5,
+                        source_filter: sourceFilter || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const rules = data.data.rules;
+                    let html = `<h3>Retrieved ${rules.length} Rules</h3>`;
+
+                    rules.forEach(rule => {
+                        html += `
+                            <div class="rule-card">
+                                <h3>${rule.rule_id}</h3>
+                                <p class="rule-text">${rule.rule_text}</p>
+                                <div class="metadata">
+                                    <span class="badge source">${rule.source}</span>
+                                    <span class="badge category">${rule.category}</span>
+                                    <span class="badge citation">${rule.citation}</span>
+                                    ${rule.metadata.grade_level ? `<span class="badge grade">Grade: ${rule.metadata.grade_level}</span>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">Error retrieving rules</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function getWordList() {
+            const gradeLevel = document.getElementById('gradeLevel').value;
+            const resultsDiv = document.getElementById('wordListResults');
+
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading">Retrieving word list...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/rag/word-list/${gradeLevel}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const words = data.data.word_list;
+                    let html = `<h3>${data.data.grade_level} Word List (${words.length} words)</h3>`;
+                    html += '<div class="word-list">';
+
+                    words.forEach(word => {
+                        html += `<span class="word-tag">${word}</span>`;
+                    });
+
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">Error retrieving word list</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function validateDecodability() {
+            const text = document.getElementById('textToValidate').value;
+            const phonemes = document.getElementById('allowedPhonemes').value.split(',').map(p => p.trim());
+            const resultsDiv = document.getElementById('validationResults');
+
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading">Validating text...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/rag/validate-decodability`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        allowed_phonemes: phonemes,
+                        allowed_sight_words: ["the", "a", "to", "and", "on"]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const validation = data.data;
+                    const isValid = validation.is_valid;
+
+                    let html = `
+                        <div class="validation-result ${isValid ? 'valid' : 'invalid'}">
+                            <h3>${isValid ? 'VALID' : 'INVALID'} - ${(validation.compliance_rate * 100).toFixed(1)}% Compliant</h3>
+                            <p><strong>Total Words:</strong> ${validation.total_words}</p>
+                            <p><strong>Compliant Words:</strong> ${validation.compliant_words}</p>
+                            <p><strong>Violations:</strong> ${validation.violations_count}</p>
+                    `;
+
+                    if (validation.violations.length > 0) {
+                        html += '<h4>Non-Decodable Words:</h4><ul>';
+                        validation.violations.forEach(v => {
+                            html += `<li><strong>${v.word}</strong>: ${v.reason}</li>`;
+                        });
+                        html += '</ul>';
+                    }
+
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">Error validating text</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function getRAGStats() {
+            const resultsDiv = document.getElementById('statsResults');
+
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading">Loading statistics...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/rag/stats`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const stats = data.data;
+
+                    let html = '<div class="stats-grid">';
+                    html += `
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.total_rules}</div>
+                            <div class="stat-label">Total Rules</div>
+                        </div>
+                    `;
+
+                    Object.entries(stats.source_counts).forEach(([source, count]) => {
+                        html += `
+                            <div class="stat-card">
+                                <div class="stat-value">${count}</div>
+                                <div class="stat-label">${source} Rules</div>
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+                    html += `<p style="margin-top: 20px;"><strong>Available Word Lists:</strong> ${stats.available_word_lists.join(', ')}</p>`;
+
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">Error loading statistics</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Load stats on page load
+        window.addEventListener('load', () => {
+            setTimeout(getRAGStats, 500);
+        });
+    </script>
+</body>
+</html>

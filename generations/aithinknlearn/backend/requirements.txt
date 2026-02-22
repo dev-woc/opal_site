@@ -11,3 +11,8 @@ pytest
 pytest-asyncio
 httpx
 openai
+
+# RAG System Dependencies
+chromadb
+sentence-transformers
+numpy

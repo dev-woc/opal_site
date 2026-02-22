@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 from backend.orchestrator import MultiAgentOrchestrator
+from backend.rag import VectorDatabase, PedagogicalRulesRetriever, ConstraintValidator
 
 # Load environment variables
 load_dotenv()
@@ -40,8 +41,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize orchestrator
+# Initialize orchestrator and RAG system
 orchestrator = None
+rag_retriever = None
+constraint_validator = None
 
 
 # Request/Response Models
@@ -67,10 +70,30 @@ class DiagnosticCycleRequest(BaseModel):
     story_theme: Optional[str] = "adventure"
 
 
+class RAGQueryRequest(BaseModel):
+    query: str
+    n_results: Optional[int] = 5
+    source_filter: Optional[str] = None
+    category_filter: Optional[str] = None
+
+
+class ValidationRequest(BaseModel):
+    text: str
+    allowed_phonemes: List[str]
+    allowed_sight_words: Optional[List[str]] = None
+
+
+class ConstraintValidationRequest(BaseModel):
+    generated_output: str
+    allowed_phonemes: List[str]
+    retrieved_rules: List[Dict[str, Any]]
+    allowed_sight_words: Optional[List[str]] = None
+
+
 @app.on_event("startup")
 async def startup_event():
-    """Initialize the orchestrator on startup"""
-    global orchestrator
+    """Initialize the orchestrator and RAG system on startup"""
+    global orchestrator, rag_retriever, constraint_validator
     logger.info("Starting Multi-Agent Orchestration System")
 
     api_key = os.getenv("OPENAI_API_KEY")
@@ -79,6 +102,12 @@ async def startup_event():
 
     orchestrator = MultiAgentOrchestrator(openai_api_key=api_key)
     logger.info("Orchestrator initialized successfully")
+
+    # Initialize RAG system
+    logger.info("Initializing RAG system")
+    rag_retriever = PedagogicalRulesRetriever()
+    constraint_validator = ConstraintValidator()
+    logger.info("RAG system initialized successfully")
 
 
 @app.get("/")
@@ -295,6 +324,195 @@ async def reset_orchestrator() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Error resetting orchestrator: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# RAG System Endpoints
+
+@app.post("/api/rag/retrieve-rules")
+async def retrieve_pedagogical_rules(request: RAGQueryRequest) -> Dict[str, Any]:
+    """
+    Retrieve pedagogical rules from RAG system
+
+    Args:
+        request: Query parameters for rule retrieval
+
+    Returns:
+        Retrieved rules with source citations
+    """
+    if rag_retriever is None:
+        raise HTTPException(status_code=500, detail="RAG system not initialized")
+
+    try:
+        logger.info(f"Retrieving rules for query: {request.query}")
+
+        rules = rag_retriever.retrieve_rules(
+            query=request.query,
+            n_results=request.n_results,
+            source_filter=request.source_filter,
+            category_filter=request.category_filter
+        )
+
+        return {
+            "success": True,
+            "data": {
+                "rules": rules,
+                "count": len(rules),
+                "query": request.query
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error retrieving rules: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/rag/word-list/{grade_level}")
+async def get_word_list(grade_level: str) -> Dict[str, Any]:
+    """
+    Get grade-appropriate word list from FCRR database
+
+    Args:
+        grade_level: Grade level (kindergarten, grade1, grade2, grade3)
+
+    Returns:
+        Word list for specified grade level
+    """
+    if rag_retriever is None:
+        raise HTTPException(status_code=500, detail="RAG system not initialized")
+
+    try:
+        logger.info(f"Retrieving word list for grade level: {grade_level}")
+
+        word_list = rag_retriever.get_word_list(grade_level)
+
+        return {
+            "success": True,
+            "data": {
+                "word_list": word_list,
+                "count": len(word_list),
+                "grade_level": grade_level
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error retrieving word list: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/rag/validate-decodability")
+async def validate_decodability(request: ValidationRequest) -> Dict[str, Any]:
+    """
+    Validate text decodability against allowed phonemes
+
+    Args:
+        request: Text and allowed phonemes
+
+    Returns:
+        Validation results
+    """
+    if constraint_validator is None:
+        raise HTTPException(status_code=500, detail="Constraint validator not initialized")
+
+    try:
+        logger.info(f"Validating decodability of text ({len(request.text)} chars)")
+
+        validation = constraint_validator.validate_decodability(
+            text=request.text,
+            allowed_phonemes=request.allowed_phonemes,
+            allowed_sight_words=request.allowed_sight_words
+        )
+
+        return {
+            "success": True,
+            "data": validation
+        }
+
+    except Exception as e:
+        logger.error(f"Error validating decodability: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/rag/validate-output")
+async def validate_output(request: ConstraintValidationRequest) -> Dict[str, Any]:
+    """
+    Validate generated output against RAG constraints
+
+    Args:
+        request: Generated output and constraints
+
+    Returns:
+        Comprehensive validation results
+    """
+    if constraint_validator is None:
+        raise HTTPException(status_code=500, detail="Constraint validator not initialized")
+
+    try:
+        logger.info(f"Validating output against RAG constraints")
+
+        constraints = {
+            "allowed_phonemes": request.allowed_phonemes,
+            "retrieved_rules": request.retrieved_rules,
+            "allowed_sight_words": request.allowed_sight_words
+        }
+
+        validation = constraint_validator.validate_output(
+            generated_output=request.generated_output,
+            constraints=constraints
+        )
+
+        # Also check if output should be rejected
+        rejection_check = constraint_validator.reject_non_compliant(
+            generated_output=request.generated_output,
+            constraints=constraints
+        )
+
+        return {
+            "success": True,
+            "data": {
+                "validation": validation,
+                "accepted": rejection_check["accepted"],
+                "rejection_reason": rejection_check["rejection_reason"]
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error validating output: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/rag/stats")
+async def get_rag_stats() -> Dict[str, Any]:
+    """
+    Get RAG system statistics
+
+    Returns:
+        Statistics about loaded rules
+    """
+    if rag_retriever is None:
+        raise HTTPException(status_code=500, detail="RAG system not initialized")
+
+    try:
+        total_rules = rag_retriever.vector_db.count_rules()
+
+        # Get counts by source
+        sources = ["WRS", "OG", "UFLI", "FCRR"]
+        source_counts = {}
+        for source in sources:
+            rules = rag_retriever.get_rules_by_source(source)
+            source_counts[source] = len(rules)
+
+        return {
+            "success": True,
+            "data": {
+                "total_rules": total_rules,
+                "source_counts": source_counts,
+                "available_word_lists": list(rag_retriever.SAMPLE_WORD_LISTS.keys())
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting RAG stats: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

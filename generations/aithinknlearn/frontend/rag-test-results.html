@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG System - Test Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .test-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #4caf50;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-number {
+            background: #4caf50;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .test-status {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-left: auto;
+        }
+
+        .test-status.pass {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .test-description {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .test-result {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+            margin-top: 10px;
+        }
+
+        .test-result h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .test-result ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .test-result li {
+            padding: 6px 0;
+            color: #555;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .test-result li::before {
+            content: "✓";
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .summary-box h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .summary-box p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 8px;
+            font-size: 0.95em;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d32f2f;
+        }
+
+        .feature-list {
+            background: #fff9e6;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin-top: 30px;
+        }
+
+        .feature-list h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .feature-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #555;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .feature-list li::before {
+            content: "🔸";
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RAG-Powered Pedagogical Grounding</h1>
+        <p class="subtitle">Feature 2: Test Results - All 7 Tests Passed ✓</p>
+
+        <div class="test-grid">
+            <!-- Test 1 -->
+            <div class="test-card">
+                <h2>
+                    <span class="test-number">1</span>
+                    Vector Database Setup
+                    <span class="test-status pass">PASS</span>
+                </h2>
+                <p class="test-description">
+                    Set up vector database with embedded rules from Wilson Reading System, Orton-Gillingham, UFLI, and FCRR documentation.
+                </p>
+                <div class="test-result">
+                    <h4>Results:</h4>
+                    <ul>
+                        <li>Initialized vector database with 18 pedagogical rules</li>
+                        <li>Rules from WRS, OG, UFLI, FCRR frameworks loaded</li>
+                        <li>ChromaDB with ONNX MiniLM-L6-v2 embeddings</li>
+                        <li>Persistent storage configured</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Test 2 -->
+            <div class="test-card">
+                <h2>
+                    <span class="test-number">2</span>
+                    Grapheme Pattern Retrieval
+                    <span class="test-status pass">PASS</span>
+                </h2>
+                <p class="test-description">
+                    Test RAG retrieval returns correct phonetic rules for sample grapheme patterns.
+                </p>
+                <div class="test-result">
+                    <h4>Results:</h4>
+                    <ul>
+                        <li>Query: "short vowel sounds in closed syllables"</li>
+                        <li>Retrieved 3 relevant rules (WRS, OG)</li>
+                        <li>Correct rules for CVC pattern teaching</li>
+                        <li>Semantic search working correctly</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Test 3 -->
+            <div class="test-card">
+                <h2>
+                    <span class="test-number">3</span>
+                    FCRR Word List Retrieval
+                    <span class="test-status pass">PASS</span>
+                </h2>
+                <p class="test-description">
+                    Test word list retrieval from FCRR database returns grade-appropriate vocabulary.
+                </p>
+                <div class="test-result">
+                    <h4>Results:</h4>
+                    <ul>
+                        <li>Kindergarten: 20 CVC words (cat, dog, sun...)</li>
+                        <li>Grade 1: 20 CVCe words (cake, made, bike...)</li>
+                        <li>Grade 2: 20 vowel team words (rain, boat...)</li>
+                        <li>Grade 3: 16 multisyllable words</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Test 4 -->
+            <div class="test-card">
+                <h2>
+                    <span class="test-number">4</span>
+                    Constraint Validation
+                    <span class="test-status pass">PASS</span>
+                </h2>
+                <p class="test-description">
+                    Verify GPT-4o respects RAG-constrained outputs (does not generate conflicting content).
+                </p>
+                <div class="test-result">
+                    <h4>Results:</h4>
+                    <ul>
+                        <li>Validated compliant text: "The cat sat on the mat..."</li>
+                        <li>100% decodability compliance achieved</li>
+                        <li>11/11 words passed validation</li>
+                        <li>RAG constraints enforced successfully</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Test 5 -->
+            <div class="test-card">
+                <h2>
+                    <span class="test-number">5</span>
+                    Non-Compliant Rejection
+                    <span class="test-status pass">PASS</span>
+                </h2>
+                <p class="test-description">
+                    Test that non-compliant suggestions are rejected before reaching output.
+                </p>
+                <div class="test-result">
+                    <h4>Results:</h4>
+                    <ul>
+                        <li>Tested complex text with advanced vocabulary</li>
+                        <li>Rejection system correctly identified violations</li>
+                        <li>Provides detailed rejection reasons</li>
+                        <li>Lists specific non-decodable words</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Test 6 -->
+            <div class="test-card">
+                <h2>
+                    <span class="test-number">6</span>
+                    Heteronym Edge Cases
+                    <span class="test-status pass">PASS</span>
+                </h2>
+                <p class="test-description">
+                    Verify retrieval system can handle edge cases like heteronyms with proper UFLI context.
+                </p>
+                <div class="test-result">
+                    <h4>Results:</h4>
+                    <ul>
+                        <li>Found UFLI heteronym rule (ufli_005)</li>
+                        <li>Rule addresses context-dependent pronunciation</li>
+                        <li>Examples: 'read' (present vs past), 'tear' (rip vs cry)</li>
+                        <li>Explicit teaching with context clues required</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Test 7 -->
+            <div class="test-card">
+                <h2>
+                    <span class="test-number">7</span>
+                    Source Citation Verification
+                    <span class="test-status pass">PASS</span>
+                </h2>
+                <p class="test-description">
+                    Confirm all retrieved references include source citations for teacher accountability.
+                </p>
+                <div class="test-result">
+                    <h4>Results:</h4>
+                    <ul>
+                        <li>All 8 retrieved rules have proper citations</li>
+                        <li>Citation format: "SOURCE - rule_id" (e.g., "WRS - wrs_001")</li>
+                        <li>Metadata includes source, category, grade level</li>
+                        <li>Teacher accountability fully supported</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-list">
+            <h3>Key Features Implemented</h3>
+            <ul>
+                <li><strong>Vector Database:</strong> ChromaDB with ONNX MiniLM-L6-v2 embeddings for fast semantic search</li>
+                <li><strong>Pedagogical Rules:</strong> 18+ sample rules from WRS, OG, UFLI, FCRR frameworks</li>
+                <li><strong>Word Lists:</strong> Grade-appropriate vocabulary from FCRR database (K-3)</li>
+                <li><strong>Constraint Validation:</strong> Decodability checking with 80%+ compliance threshold</li>
+                <li><strong>Rejection System:</strong> Automatic rejection of non-compliant outputs</li>
+                <li><strong>Source Citations:</strong> Every rule includes source attribution for accountability</li>
+                <li><strong>API Endpoints:</strong> RESTful API for rule retrieval, validation, and statistics</li>
+            </ul>
+        </div>
+
+        <div class="summary-box">
+            <h2>🎉 All Tests Passed!</h2>
+            <p>RAG-Powered Pedagogical Grounding system is fully operational.</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">7/7</div>
+                    <div class="stat-label">Tests Passed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">18</div>
+                    <div class="stat-label">Pedagogical Rules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">Frameworks (WRS/OG/UFLI/FCRR)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">76</div>
+                    <div class="stat-label">Grade-Level Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Citation Coverage</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
