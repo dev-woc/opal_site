@@ -15,6 +15,10 @@ from dotenv import load_dotenv
 from backend.orchestrator import MultiAgentOrchestrator
 from backend.rag import VectorDatabase, PedagogicalRulesRetriever, ConstraintValidator
 from backend.phonetic import G2PConverter, DecodabilityChecker, OrthographicRuleEngine, HeteronymHandler
+from backend.interactivity import (
+    BlendingBoard, TTSEngine, HapticsHandler,
+    PerformanceTracker, AdaptiveDifficultyManager
+)
 
 # Load environment variables
 load_dotenv()
@@ -52,6 +56,13 @@ g2p_converter = None
 decodability_checker = None
 orthographic_engine = None
 heteronym_handler = None
+
+# Initialize interactivity system
+blending_board = None
+tts_engine = None
+haptics_handler = None
+performance_tracker = None
+difficulty_manager = None
 
 
 # Request/Response Models
@@ -126,6 +137,7 @@ async def startup_event():
     """Initialize the orchestrator and RAG system on startup"""
     global orchestrator, rag_retriever, constraint_validator
     global g2p_converter, decodability_checker, orthographic_engine, heteronym_handler
+    global blending_board, tts_engine, haptics_handler, performance_tracker, difficulty_manager
     logger.info("Starting Multi-Agent Orchestration System")
 
     api_key = os.getenv("OPENAI_API_KEY")
@@ -148,6 +160,15 @@ async def startup_event():
     orthographic_engine = OrthographicRuleEngine()
     heteronym_handler = HeteronymHandler()
     logger.info("Phonetic Verification System initialized successfully")
+
+    # Initialize interactivity system
+    logger.info("Initializing Digital Interactivity & Gamification System")
+    blending_board = BlendingBoard()
+    tts_engine = TTSEngine()
+    haptics_handler = HapticsHandler()
+    performance_tracker = PerformanceTracker()
+    difficulty_manager = AdaptiveDifficultyManager()
+    logger.info("Digital Interactivity System initialized successfully")
 
 
 @app.get("/")
@@ -738,6 +759,452 @@ async def get_phonetic_stats() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Error getting phonetic stats: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Digital Interactivity & Gamification Endpoints
+
+class TileRequest(BaseModel):
+    letter: str
+    phoneme: str
+    tile_id: Optional[str] = None
+
+
+class MoveTileRequest(BaseModel):
+    tile_id: str
+    new_position: int
+
+
+class LoadWordRequest(BaseModel):
+    word: str
+    phoneme_map: Dict[str, str]
+
+
+class AttemptRequest(BaseModel):
+    word: str
+    phonemes: List[str]
+    success: bool
+    time_ms: int
+    error_type: Optional[str] = None
+
+
+class HapticRequest(BaseModel):
+    pattern: str
+    intensity: Optional[float] = None
+
+
+class PhonemeHapticRequest(BaseModel):
+    phoneme: str
+    is_vowel: bool = False
+
+
+class TTSRequest(BaseModel):
+    phoneme: Optional[str] = None
+    phonemes: Optional[List[str]] = None
+    word: Optional[str] = None
+    blend_speed: float = 1.0
+
+
+@app.post("/api/interactivity/blending-board/add-tile")
+async def add_tile_to_board(request: TileRequest) -> Dict[str, Any]:
+    """Add a letter tile to the blending board"""
+    if blending_board is None:
+        raise HTTPException(status_code=500, detail="Blending board not initialized")
+
+    try:
+        tile = blending_board.add_tile(request.letter, request.phoneme, request.tile_id)
+        blend = blending_board.get_blend()
+
+        return {
+            "success": True,
+            "data": {
+                "tile": {
+                    "id": tile.tile_id,
+                    "letter": tile.letter,
+                    "phoneme": tile.phoneme,
+                    "position": tile.position
+                },
+                "current_blend": blend
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error adding tile: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/interactivity/blending-board/remove-tile/{tile_id}")
+async def remove_tile_from_board(tile_id: str) -> Dict[str, Any]:
+    """Remove a tile from the blending board"""
+    if blending_board is None:
+        raise HTTPException(status_code=500, detail="Blending board not initialized")
+
+    try:
+        removed = blending_board.remove_tile(tile_id)
+        blend = blending_board.get_blend()
+
+        return {
+            "success": removed,
+            "data": {
+                "current_blend": blend
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error removing tile: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/interactivity/blending-board/move-tile")
+async def move_tile_on_board(request: MoveTileRequest) -> Dict[str, Any]:
+    """Move a tile to a new position"""
+    if blending_board is None:
+        raise HTTPException(status_code=500, detail="Blending board not initialized")
+
+    try:
+        moved = blending_board.move_tile(request.tile_id, request.new_position)
+        blend = blending_board.get_blend()
+
+        return {
+            "success": moved,
+            "data": {
+                "current_blend": blend
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error moving tile: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/interactivity/blending-board/get-blend")
+async def get_current_blend() -> Dict[str, Any]:
+    """Get current blend from the board"""
+    if blending_board is None:
+        raise HTTPException(status_code=500, detail="Blending board not initialized")
+
+    try:
+        blend = blending_board.get_blend()
+
+        return {
+            "success": True,
+            "data": blend
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting blend: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/interactivity/blending-board/load-word")
+async def load_word_on_board(request: LoadWordRequest) -> Dict[str, Any]:
+    """Load a word onto the blending board"""
+    if blending_board is None:
+        raise HTTPException(status_code=500, detail="Blending board not initialized")
+
+    try:
+        tiles = blending_board.load_word(request.word, request.phoneme_map)
+        blend = blending_board.get_blend()
+
+        return {
+            "success": True,
+            "data": {
+                "tiles": [
+                    {"id": t.tile_id, "letter": t.letter, "phoneme": t.phoneme, "position": t.position}
+                    for t in tiles
+                ],
+                "current_blend": blend
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error loading word: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/interactivity/blending-board/clear")
+async def clear_blending_board() -> Dict[str, Any]:
+    """Clear all tiles from the board"""
+    if blending_board is None:
+        raise HTTPException(status_code=500, detail="Blending board not initialized")
+
+    try:
+        blending_board.clear_board()
+
+        return {
+            "success": True,
+            "message": "Board cleared"
+        }
+
+    except Exception as e:
+        logger.error(f"Error clearing board: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/interactivity/tts/generate")
+async def generate_tts_audio(request: TTSRequest) -> Dict[str, Any]:
+    """Generate TTS audio parameters"""
+    if tts_engine is None:
+        raise HTTPException(status_code=500, detail="TTS engine not initialized")
+
+    try:
+        if request.phoneme:
+            audio = tts_engine.generate_phoneme_audio(request.phoneme)
+        elif request.phonemes:
+            audio = tts_engine.generate_blend_audio(request.phonemes, request.blend_speed)
+        elif request.word:
+            audio = tts_engine.generate_word_audio(request.word)
+        else:
+            raise HTTPException(status_code=400, detail="Must provide phoneme, phonemes, or word")
+
+        return {
+            "success": True,
+            "data": audio
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating TTS: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/interactivity/tts/settings")
+async def get_tts_settings() -> Dict[str, Any]:
+    """Get TTS voice settings"""
+    if tts_engine is None:
+        raise HTTPException(status_code=500, detail="TTS engine not initialized")
+
+    try:
+        settings = tts_engine.get_voice_settings()
+
+        return {
+            "success": True,
+            "data": settings
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting TTS settings: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/interactivity/haptics/generate")
+async def generate_haptic_feedback(request: HapticRequest) -> Dict[str, Any]:
+    """Generate haptic feedback configuration"""
+    if haptics_handler is None:
+        raise HTTPException(status_code=500, detail="Haptics handler not initialized")
+
+    try:
+        haptic_config = haptics_handler.generate_haptic_feedback(request.pattern, request.intensity)
+
+        return {
+            "success": True,
+            "data": haptic_config
+        }
+
+    except Exception as e:
+        logger.error(f"Error generating haptics: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/interactivity/haptics/phoneme-tap")
+async def generate_phoneme_haptic(request: PhonemeHapticRequest) -> Dict[str, Any]:
+    """Generate haptic feedback for phoneme tap"""
+    if haptics_handler is None:
+        raise HTTPException(status_code=500, detail="Haptics handler not initialized")
+
+    try:
+        haptic_config = haptics_handler.generate_phoneme_tap(request.phoneme, request.is_vowel)
+
+        return {
+            "success": True,
+            "data": haptic_config
+        }
+
+    except Exception as e:
+        logger.error(f"Error generating phoneme haptic: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/interactivity/haptics/settings")
+async def get_haptic_settings() -> Dict[str, Any]:
+    """Get haptic settings"""
+    if haptics_handler is None:
+        raise HTTPException(status_code=500, detail="Haptics handler not initialized")
+
+    try:
+        settings = haptics_handler.get_haptic_settings()
+
+        return {
+            "success": True,
+            "data": settings
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting haptic settings: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/interactivity/performance/record-attempt")
+async def record_performance_attempt(request: AttemptRequest) -> Dict[str, Any]:
+    """Record a student attempt"""
+    if performance_tracker is None:
+        raise HTTPException(status_code=500, detail="Performance tracker not initialized")
+
+    try:
+        metrics = performance_tracker.record_attempt(
+            request.word,
+            request.phonemes,
+            request.success,
+            request.time_ms,
+            request.error_type
+        )
+
+        return {
+            "success": True,
+            "data": metrics
+        }
+
+    except Exception as e:
+        logger.error(f"Error recording attempt: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/interactivity/performance/metrics")
+async def get_performance_metrics() -> Dict[str, Any]:
+    """Get current performance metrics"""
+    if performance_tracker is None:
+        raise HTTPException(status_code=500, detail="Performance tracker not initialized")
+
+    try:
+        metrics = performance_tracker.get_current_metrics()
+
+        return {
+            "success": True,
+            "data": metrics
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting metrics: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/interactivity/performance/summary")
+async def get_performance_summary() -> Dict[str, Any]:
+    """Get comprehensive performance summary"""
+    if performance_tracker is None:
+        raise HTTPException(status_code=500, detail="Performance tracker not initialized")
+
+    try:
+        summary = performance_tracker.get_performance_summary()
+
+        return {
+            "success": True,
+            "data": summary
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting summary: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/interactivity/difficulty/info")
+async def get_difficulty_info() -> Dict[str, Any]:
+    """Get current difficulty information"""
+    if difficulty_manager is None:
+        raise HTTPException(status_code=500, detail="Difficulty manager not initialized")
+
+    try:
+        info = difficulty_manager.get_difficulty_info()
+
+        return {
+            "success": True,
+            "data": info
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting difficulty info: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/interactivity/difficulty/next-word")
+async def get_next_difficulty_word(force_boss: bool = False) -> Dict[str, Any]:
+    """Get next word based on difficulty"""
+    if difficulty_manager is None:
+        raise HTTPException(status_code=500, detail="Difficulty manager not initialized")
+
+    try:
+        word_challenge = difficulty_manager.get_next_word(force_boss)
+
+        return {
+            "success": True,
+            "data": word_challenge
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting next word: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/interactivity/difficulty/add-xp/{points}")
+async def add_xp_points(points: int) -> Dict[str, Any]:
+    """Add XP points and check for level up"""
+    if difficulty_manager is None:
+        raise HTTPException(status_code=500, detail="Difficulty manager not initialized")
+
+    try:
+        result = difficulty_manager.add_xp(points)
+
+        return {
+            "success": True,
+            "data": result
+        }
+
+    except Exception as e:
+        logger.error(f"Error adding XP: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/interactivity/difficulty/boss-status")
+async def get_boss_level_status() -> Dict[str, Any]:
+    """Get boss level status"""
+    if difficulty_manager is None:
+        raise HTTPException(status_code=500, detail="Difficulty manager not initialized")
+
+    try:
+        status = difficulty_manager.get_boss_level_status()
+
+        return {
+            "success": True,
+            "data": status
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting boss status: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/interactivity/stats")
+async def get_interactivity_stats() -> Dict[str, Any]:
+    """Get interactivity system statistics"""
+    if blending_board is None or tts_engine is None or haptics_handler is None:
+        raise HTTPException(status_code=500, detail="Interactivity system not initialized")
+
+    try:
+        return {
+            "success": True,
+            "data": {
+                "blending_board_tiles": len(blending_board.tiles),
+                "tts_supported_phonemes": len(tts_engine.get_supported_phonemes()),
+                "haptic_patterns": len(haptics_handler.pattern_library),
+                "performance_attempts": performance_tracker.metrics.total_attempts if performance_tracker else 0,
+                "current_difficulty": difficulty_manager.current_level.name if difficulty_manager else "N/A",
+                "system_status": "operational"
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting interactivity stats: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

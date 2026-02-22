@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Blending Board - Digital Interactivity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .blending-area {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .blending-board {
+            min-height: 200px;
+            background: #f8f9fa;
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .letter-tile {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: move;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            user-select: none;
+        }
+
+        .letter-tile:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .letter-tile.dragging {
+            opacity: 0.5;
+            transform: scale(1.1);
+        }
+
+        .letter-tile.vowel {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .available-letters {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .available-letters .letter-tile {
+            width: 100%;
+            height: 70px;
+            font-size: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .current-word {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .phoneme-display {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .phoneme-badge {
+            padding: 8px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .audio-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-control input {
+            flex: 1;
+        }
+
+        .haptic-indicator {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .haptic-indicator.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            animation: pulse 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .feedback-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .feedback-message.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            display: block;
+        }
+
+        .feedback-message.error {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .letter-tile {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .available-letters {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Virtual Blending Board</h1>
+            <p>Drag letter tiles to blend words with audio and haptic feedback</p>
+        </div>
+
+        <div class="main-grid">
+            <div class="blending-area">
+                <h3>Blending Board</h3>
+                <div id="blending-board" class="blending-board">
+                    <p style="color: #999;">Drag letters here to start blending</p>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-success" onclick="speakBlend()">Speak Blend</button>
+                    <button class="btn btn-primary" onclick="speakIndividual()">Speak Letters</button>
+                    <button class="btn btn-danger" onclick="clearBoard()">Clear Board</button>
+                    <button class="btn btn-primary" onclick="loadSampleWord()">Load Sample</button>
+                </div>
+
+                <div id="feedback-message" class="feedback-message"></div>
+
+                <h3 style="margin-top: 30px;">Available Letters</h3>
+                <div id="available-letters" class="available-letters">
+                    <!-- Letter tiles will be dynamically added -->
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="info-panel">
+                    <h3>Current Blend</h3>
+                    <div id="current-word" class="current-word">---</div>
+                    <div id="phoneme-display" class="phoneme-display"></div>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Audio Settings</h3>
+                    <div class="audio-controls">
+                        <div class="volume-control">
+                            <span>Volume:</span>
+                            <input type="range" id="volume-slider" min="0" max="100" value="80">
+                            <span id="volume-value">80%</span>
+                        </div>
+                        <div class="volume-control">
+                            <span>Speed:</span>
+                            <input type="range" id="speed-slider" min="50" max="150" value="100">
+                            <span id="speed-value">1.0x</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Haptic Feedback</h3>
+                    <div class="volume-control">
+                        <span>Enable:</span>
+                        <input type="checkbox" id="haptic-enable" checked>
+                    </div>
+                    <div id="haptic-indicator" class="haptic-indicator">
+                        Tap letters for haptic feedback
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Tiles</div>
+                            <div class="stat-value" id="stat-tiles">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Phonemes</div>
+                            <div class="stat-value" id="stat-phonemes">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001/api';
+        let draggedElement = null;
+        let currentBlend = { word: '', phonemes: [], tiles: [] };
+
+        // Speech Synthesis for TTS
+        const synth = window.speechSynthesis;
+
+        // Available letters with phonemes
+        const availableLetters = [
+            { letter: 'c', phoneme: 'k', vowel: false },
+            { letter: 'a', phoneme: 'æ', vowel: true },
+            { letter: 't', phoneme: 't', vowel: false },
+            { letter: 'd', phoneme: 'd', vowel: false },
+            { letter: 'o', phoneme: 'ɑ', vowel: true },
+            { letter: 'g', phoneme: 'g', vowel: false },
+            { letter: 'sh', phoneme: 'ʃ', vowel: false },
+            { letter: 'i', phoneme: 'ɪ', vowel: true },
+            { letter: 'p', phoneme: 'p', vowel: false },
+            { letter: 'e', phoneme: 'ɛ', vowel: true },
+            { letter: 'n', phoneme: 'n', vowel: false },
+            { letter: 'u', phoneme: 'ʌ', vowel: true },
+            { letter: 's', phoneme: 's', vowel: false },
+            { letter: 'r', phoneme: 'r', vowel: false },
+            { letter: 'ch', phoneme: 'tʃ', vowel: false },
+            { letter: 'm', phoneme: 'm', vowel: false }
+        ];
+
+        // Initialize
+        function init() {
+            renderAvailableLetters();
+            updateDisplay();
+            setupEventListeners();
+        }
+
+        function renderAvailableLetters() {
+            const container = document.getElementById('available-letters');
+            container.innerHTML = '';
+
+            availableLetters.forEach((item, index) => {
+                const tile = createLetterTile(item.letter, item.phoneme, item.vowel, `available-${index}`);
+                container.appendChild(tile);
+            });
+        }
+
+        function createLetterTile(letter, phoneme, isVowel, id) {
+            const tile = document.createElement('div');
+            tile.className = `letter-tile ${isVowel ? 'vowel' : ''}`;
+            tile.textContent = letter;
+            tile.dataset.letter = letter;
+            tile.dataset.phoneme = phoneme;
+            tile.dataset.vowel = isVowel;
+            tile.dataset.tileId = id;
+            tile.draggable = true;
+
+            tile.addEventListener('dragstart', handleDragStart);
+            tile.addEventListener('dragend', handleDragEnd);
+            tile.addEventListener('click', () => handleTileClick(letter, phoneme, isVowel));
+
+            return tile;
+        }
+
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleTileClick(letter, phoneme, isVowel) {
+            playPhonemeSound(letter);
+            triggerHaptic(phoneme, isVowel);
+        }
+
+        function setupEventListeners() {
+            const board = document.getElementById('blending-board');
+
+            board.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+
+            board.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                if (draggedElement) {
+                    const letter = draggedElement.dataset.letter;
+                    const phoneme = draggedElement.dataset.phoneme;
+                    const isVowel = draggedElement.dataset.vowel === 'true';
+
+                    await addTileToBoard(letter, phoneme);
+                    playPhonemeSound(letter);
+                    triggerHaptic(phoneme, isVowel);
+                }
+            });
+
+            // Volume controls
+            document.getElementById('volume-slider').addEventListener('input', (e) => {
+                const value = e.target.value;
+                document.getElementById('volume-value').textContent = value + '%';
+            });
+
+            document.getElementById('speed-slider').addEventListener('input', (e) => {
+                const value = e.target.value;
+                const speed = value / 100;
+                document.getElementById('speed-value').textContent = speed.toFixed(1) + 'x';
+            });
+        }
+
+        async function addTileToBoard(letter, phoneme) {
+            try {
+                const response = await fetch(`${API_BASE}/interactivity/blending-board/add-tile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ letter, phoneme })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    currentBlend = data.data.current_blend;
+                    updateDisplay();
+                }
+            } catch (error) {
+                console.error('Error adding tile:', error);
+            }
+        }
+
+        async function clearBoard() {
+            try {
+                await fetch(`${API_BASE}/interactivity/blending-board/clear`, {
+                    method: 'POST'
+                });
+
+                currentBlend = { word: '', phonemes: [], tiles: [] };
+                updateDisplay();
+                showFeedback('Board cleared!', 'success');
+            } catch (error) {
+                console.error('Error clearing board:', error);
+            }
+        }
+
+        async function loadSampleWord() {
+            const sampleWords = [
+                { word: 'cat', phoneme_map: { c: 'k', a: 'æ', t: 't' } },
+                { word: 'dog', phoneme_map: { d: 'd', o: 'ɑ', g: 'g' } },
+                { word: 'ship', phoneme_map: { s: 'ʃ', h: 'ʃ', i: 'ɪ', p: 'p' } }
+            ];
+
+            const sample = sampleWords[Math.floor(Math.random() * sampleWords.length)];
+
+            try {
+                const response = await fetch(`${API_BASE}/interactivity/blending-board/load-word`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sample)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    currentBlend = data.data.current_blend;
+                    updateDisplay();
+                    showFeedback(`Loaded: ${sample.word}`, 'success');
+                }
+            } catch (error) {
+                console.error('Error loading word:', error);
+            }
+        }
+
+        function updateDisplay() {
+            // Update current word
+            document.getElementById('current-word').textContent = currentBlend.word || '---';
+
+            // Update phoneme display
+            const phonemeDisplay = document.getElementById('phoneme-display');
+            phonemeDisplay.innerHTML = '';
+            currentBlend.phonemes.forEach(phoneme => {
+                const badge = document.createElement('div');
+                badge.className = 'phoneme-badge';
+                badge.textContent = phoneme;
+                phonemeDisplay.appendChild(badge);
+            });
+
+            // Update board tiles
+            const board = document.getElementById('blending-board');
+            board.innerHTML = '';
+
+            if (currentBlend.tiles.length === 0) {
+                const placeholder = document.createElement('p');
+                placeholder.style.color = '#999';
+                placeholder.textContent = 'Drag letters here to start blending';
+                board.appendChild(placeholder);
+            } else {
+                currentBlend.tiles.forEach(tile => {
+                    const tileEl = createLetterTile(tile.letter, tile.phoneme, tile.is_vowel, tile.id);
+                    board.appendChild(tileEl);
+                });
+            }
+
+            // Update stats
+            document.getElementById('stat-tiles').textContent = currentBlend.tiles.length;
+            document.getElementById('stat-phonemes').textContent = currentBlend.phonemes.length;
+        }
+
+        function playPhonemeSound(phoneme) {
+            const utterance = new SpeechSynthesisUtterance(phoneme);
+            const volume = document.getElementById('volume-slider').value / 100;
+            const rate = document.getElementById('speed-slider').value / 100;
+
+            utterance.volume = volume;
+            utterance.rate = rate;
+            utterance.pitch = 1.0;
+
+            synth.speak(utterance);
+        }
+
+        function speakBlend() {
+            if (currentBlend.word) {
+                playPhonemeSound(currentBlend.word);
+                showFeedback(`Speaking: ${currentBlend.word}`, 'success');
+            }
+        }
+
+        function speakIndividual() {
+            if (currentBlend.phonemes.length > 0) {
+                currentBlend.phonemes.forEach((phoneme, index) => {
+                    setTimeout(() => {
+                        playPhonemeSound(phoneme);
+                    }, index * 600);
+                });
+                showFeedback('Speaking individual phonemes...', 'success');
+            }
+        }
+
+        function triggerHaptic(phoneme, isVowel) {
+            const enabled = document.getElementById('haptic-enable').checked;
+            if (!enabled) return;
+
+            // Use Vibration API if available
+            if ('vibrate' in navigator) {
+                const duration = isVowel ? 30 : 15;
+                navigator.vibrate(duration);
+            }
+
+            // Visual feedback
+            const indicator = document.getElementById('haptic-indicator');
+            indicator.classList.add('active');
+            indicator.textContent = `Haptic: ${phoneme}`;
+            setTimeout(() => {
+                indicator.classList.remove('active');
+                indicator.textContent = 'Tap letters for haptic feedback';
+            }, 300);
+        }
+
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback-message');
+            feedback.textContent = message;
+            feedback.className = `feedback-message ${type}`;
+
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 3000);
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
