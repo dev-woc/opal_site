@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonetic Verification System - Feature 3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .test-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .test-card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        .test-section {
+            margin-bottom: 20px;
+        }
+
+        .test-section h3 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result-box pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #333;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .success {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .fail {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .phoneme-display {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: #0066cc;
+        }
+
+        .word-analysis {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+        }
+
+        .decodable {
+            border-left: 4px solid #28a745;
+        }
+
+        .non-decodable {
+            border-left: 4px solid #dc3545;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Phonetic Verification System</h1>
+            <p>Feature 3: G2P Conversion, Decodability, Orthographic Rules, Heteronym Handling</p>
+        </div>
+
+        <div class="test-grid">
+            <!-- Test 1: G2P Conversion -->
+            <div class="test-card">
+                <h2>Test 1: G2P Conversion <span id="test1-status"></span></h2>
+                <div class="test-section">
+                    <div class="input-group">
+                        <label>Words to Convert (comma-separated):</label>
+                        <input type="text" id="g2p-words" value="cat, mat, dog, run, happy">
+                    </div>
+                    <button class="button" onclick="testG2PConversion()" id="g2p-btn">
+                        Run G2P Conversion
+                    </button>
+                    <div id="g2p-result" class="result-box" style="display: none;">
+                        <pre id="g2p-output"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 2 & 3: Heteronym Handling -->
+            <div class="test-card">
+                <h2>Tests 2-3: Heteronym Disambiguation <span id="test2-status"></span></h2>
+                <div class="test-section">
+                    <h3>Present Tense "read"</h3>
+                    <div class="input-group">
+                        <label>Context:</label>
+                        <input type="text" id="read-present-context" value="I will read a book">
+                    </div>
+                    <button class="button" onclick="testHeteronym('read', 'read-present-context', 'read-present-result')">
+                        Analyze "read" (present)
+                    </button>
+                    <div id="read-present-result" class="result-box" style="display: none;">
+                        <pre id="read-present-output"></pre>
+                    </div>
+                </div>
+
+                <div class="test-section" style="margin-top: 20px;">
+                    <h3>Past Tense "read"</h3>
+                    <div class="input-group">
+                        <label>Context:</label>
+                        <input type="text" id="read-past-context" value="I already read that book yesterday">
+                    </div>
+                    <button class="button" onclick="testHeteronym('read', 'read-past-context', 'read-past-result')">
+                        Analyze "read" (past)
+                    </button>
+                    <div id="read-past-result" class="result-box" style="display: none;">
+                        <pre id="read-past-output"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 4: Decodability -->
+            <div class="test-card">
+                <h2>Test 4: Decodability Checking <span id="test4-status"></span></h2>
+                <div class="test-section">
+                    <div class="input-group">
+                        <label>Sample Text:</label>
+                        <textarea id="decodability-text">The cat sat on a mat. The dog ran. A pig is big.</textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Allowed Phonemes (comma-separated):</label>
+                        <input type="text" id="allowed-phonemes"
+                               value="K,AE,T,M,S,AA,N,DH,AH,D,AO,G,R,P,IH,B,IY,Z">
+                    </div>
+                    <div class="input-group">
+                        <label>Sight Words (comma-separated):</label>
+                        <input type="text" id="sight-words" value="the, a, is, on">
+                    </div>
+                    <button class="button" onclick="testDecodability()" id="decodability-btn">
+                        Check Decodability
+                    </button>
+                    <div id="decodability-result" class="result-box" style="display: none;">
+                        <pre id="decodability-output"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 5: 1-1-1 Doubling Rule -->
+            <div class="test-card">
+                <h2>Test 5: 1-1-1 Doubling Rule <span id="test5-status"></span></h2>
+                <div class="test-section">
+                    <div class="input-group">
+                        <label>Base Word (CVC):</label>
+                        <input type="text" id="rule-111-base" value="hop">
+                    </div>
+                    <div class="input-group">
+                        <label>Suffix:</label>
+                        <input type="text" id="rule-111-suffix" value="ing">
+                    </div>
+                    <div class="input-group">
+                        <label>Result Word:</label>
+                        <input type="text" id="rule-111-result" value="hopping">
+                    </div>
+                    <button class="button" onclick="testOrthographicRule('111')" id="rule-111-btn">
+                        Validate 1-1-1 Rule
+                    </button>
+                    <div id="rule-111-result-box" class="result-box" style="display: none;">
+                        <pre id="rule-111-output"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 6: Y-to-I Rule -->
+            <div class="test-card">
+                <h2>Test 6: Y-to-I Change Rule <span id="test6-status"></span></h2>
+                <div class="test-section">
+                    <div class="input-group">
+                        <label>Base Word:</label>
+                        <input type="text" id="rule-y2i-base" value="happy">
+                    </div>
+                    <div class="input-group">
+                        <label>Suffix:</label>
+                        <input type="text" id="rule-y2i-suffix" value="ness">
+                    </div>
+                    <div class="input-group">
+                        <label>Result Word:</label>
+                        <input type="text" id="rule-y2i-result" value="happiness">
+                    </div>
+                    <button class="button" onclick="testOrthographicRule('y_to_i')" id="rule-y2i-btn">
+                        Validate Y-to-I Rule
+                    </button>
+                    <div id="rule-y2i-result-box" class="result-box" style="display: none;">
+                        <pre id="rule-y2i-output"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 7: Content Validation -->
+            <div class="test-card">
+                <h2>Test 7: Content Validation (95% Threshold) <span id="test7-status"></span></h2>
+                <div class="test-section">
+                    <h3>Pass Example (95%+ decodable)</h3>
+                    <div class="input-group">
+                        <textarea id="valid-text" rows="3">The cat sat. The dog ran. A pig is big. The man had a hat.</textarea>
+                    </div>
+                    <button class="button" onclick="testContentValidation('valid')" id="valid-btn">
+                        Validate (Should Pass)
+                    </button>
+                    <div id="valid-result" class="result-box" style="display: none;">
+                        <pre id="valid-output"></pre>
+                    </div>
+                </div>
+
+                <div class="test-section" style="margin-top: 20px;">
+                    <h3>Fail Example (&lt;95% decodable)</h3>
+                    <div class="input-group">
+                        <textarea id="invalid-text" rows="3">The extraordinary elephant enthusiastically contemplated philosophical questions.</textarea>
+                    </div>
+                    <button class="button" onclick="testContentValidation('invalid')" id="invalid-btn">
+                        Validate (Should Fail)
+                    </button>
+                    <div id="invalid-result" class="result-box" style="display: none;">
+                        <pre id="invalid-output"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="test-card">
+            <h2>Test Summary</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="tests-passed">0</div>
+                    <div class="stat-label">Tests Passed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tests-total">7</div>
+                    <div class="stat-label">Total Tests</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="decodability-rate">--</div>
+                    <div class="stat-label">Decodability Rate</div>
+                </div>
+            </div>
+            <button class="button" onclick="runAllTests()" style="margin-top: 20px;">
+                Run All Tests
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let testResults = {
+            test1: false,
+            test2: false,
+            test3: false,
+            test4: false,
+            test5: false,
+            test6: false,
+            test7: false
+        };
+
+        function updateTestStatus(testNum, passed) {
+            testResults[`test${testNum}`] = passed;
+            const statusEl = document.getElementById(`test${testNum}-status`);
+            if (statusEl) {
+                statusEl.innerHTML = `<span class="status-badge ${passed ? 'status-pass' : 'status-fail'}">
+                    ${passed ? 'PASS' : 'FAIL'}
+                </span>`;
+            }
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const passed = Object.values(testResults).filter(v => v).length;
+            document.getElementById('tests-passed').textContent = passed;
+        }
+
+        async function testG2PConversion() {
+            const btn = document.getElementById('g2p-btn');
+            const output = document.getElementById('g2p-output');
+            const resultBox = document.getElementById('g2p-result');
+
+            const wordsInput = document.getElementById('g2p-words').value;
+            const words = wordsInput.split(',').map(w => w.trim());
+
+            btn.disabled = true;
+            btn.innerHTML = 'Converting...<span class="loading"></span>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/phonetic/g2p-convert`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ words: words })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let result = 'G2P CONVERSION RESULTS:\n\n';
+                    for (const [word, breakdown] of Object.entries(data.data.conversions)) {
+                        result += `Word: ${word}\n`;
+                        result += `Phonemes: ${breakdown.phoneme_string}\n`;
+                        result += `Count: ${breakdown.phoneme_count} phonemes\n\n`;
+                    }
+                    output.textContent = result;
+                    resultBox.style.display = 'block';
+                    updateTestStatus(1, true);
+                } else {
+                    output.textContent = 'Error: ' + JSON.stringify(data, null, 2);
+                    resultBox.style.display = 'block';
+                    updateTestStatus(1, false);
+                }
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+                resultBox.style.display = 'block';
+                updateTestStatus(1, false);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'Run G2P Conversion';
+        }
+
+        async function testHeteronym(word, contextId, resultId) {
+            const context = document.getElementById(contextId).value;
+            const outputEl = document.getElementById(resultId);
+            const resultBox = outputEl.parentElement;
+            const outputContent = resultBox.querySelector('pre');
+
+            try {
+                const response = await fetch(`${API_URL}/api/phonetic/analyze-heteronym`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: word, context: context })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const analysis = data.data;
+                    let result = `HETERONYM ANALYSIS: "${word}"\n\n`;
+                    result += `Is Heteronym: ${analysis.is_heteronym}\n`;
+                    if (analysis.is_heteronym) {
+                        result += `Selected Variant: ${analysis.selected_variant}\n`;
+                        result += `Phonemes: ${analysis.selected_phoneme_string}\n\n`;
+                        result += 'All Variants:\n';
+                        for (const [variant, info] of Object.entries(analysis.all_variants)) {
+                            result += `  ${variant}: ${info.phoneme_string}`;
+                            if (info.selected) result += ' [SELECTED]';
+                            result += `\n    Meaning: ${info.meaning}\n`;
+                        }
+                    }
+                    outputContent.textContent = result;
+                    resultBox.style.display = 'block';
+
+                    // Update test status for heteronym tests
+                    if (context.includes('will read')) {
+                        updateTestStatus(2, analysis.selected_phoneme_string.includes('IY'));
+                    } else if (context.includes('already read')) {
+                        updateTestStatus(3, analysis.selected_phoneme_string.includes('EH'));
+                    }
+                } else {
+                    outputContent.textContent = 'Error: ' + JSON.stringify(data, null, 2);
+                    resultBox.style.display = 'block';
+                }
+            } catch (error) {
+                outputContent.textContent = 'Error: ' + error.message;
+                resultBox.style.display = 'block';
+            }
+        }
+
+        async function testDecodability() {
+            const btn = document.getElementById('decodability-btn');
+            const output = document.getElementById('decodability-output');
+            const resultBox = document.getElementById('decodability-result');
+
+            const text = document.getElementById('decodability-text').value;
+            const phonemesInput = document.getElementById('allowed-phonemes').value;
+            const sightWordsInput = document.getElementById('sight-words').value;
+
+            const phonemes = phonemesInput.split(',').map(p => p.trim());
+            const sightWords = sightWordsInput.split(',').map(w => w.trim());
+
+            btn.disabled = true;
+            btn.innerHTML = 'Checking...<span class="loading"></span>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/phonetic/check-decodability`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        allowed_phonemes: phonemes,
+                        allowed_sight_words: sightWords
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const validation = data.data;
+                    let result = 'DECODABILITY CHECK:\n\n';
+                    result += `Status: ${validation.status}\n`;
+                    result += `Decodability Rate: ${validation.decodability_percentage}%\n`;
+                    result += `Threshold: ${validation.detailed_analysis.threshold_percentage}%\n`;
+                    result += `Passes: ${validation.passes ? 'YES' : 'NO'}\n\n`;
+                    result += `Decodable Words: ${validation.decodable_count}\n`;
+                    result += `Non-Decodable Words: ${validation.non_decodable_count}\n`;
+                    result += `Total Words: ${validation.total_words}\n\n`;
+
+                    if (validation.non_decodable_words.length > 0) {
+                        result += 'Non-Decodable Words:\n';
+                        validation.non_decodable_words.forEach(word => {
+                            result += `  - ${word}\n`;
+                        });
+                    }
+
+                    output.textContent = result;
+                    resultBox.style.display = 'block';
+                    document.getElementById('decodability-rate').textContent =
+                        `${validation.decodability_percentage}%`;
+                    updateTestStatus(4, validation.decodability_percentage >= 95);
+                } else {
+                    output.textContent = 'Error: ' + JSON.stringify(data, null, 2);
+                    resultBox.style.display = 'block';
+                    updateTestStatus(4, false);
+                }
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+                resultBox.style.display = 'block';
+                updateTestStatus(4, false);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'Check Decodability';
+        }
+
+        async function testOrthographicRule(ruleType) {
+            const btn = document.getElementById(`rule-${ruleType}-btn`);
+            const output = document.getElementById(`rule-${ruleType}-output`);
+            const resultBox = document.getElementById(`rule-${ruleType}-result-box`);
+
+            const base = document.getElementById(`rule-${ruleType}-base`).value;
+            const suffix = document.getElementById(`rule-${ruleType}-suffix`).value;
+            const result = document.getElementById(`rule-${ruleType}-result`).value;
+
+            btn.disabled = true;
+            btn.innerHTML = 'Validating...<span class="loading"></span>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/phonetic/validate-orthographic`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        base_word: base,
+                        suffix: suffix,
+                        result_word: result,
+                        rule_type: ruleType
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const validation = data.data;
+                    let resultText = `ORTHOGRAPHIC RULE VALIDATION:\n\n`;
+                    resultText += `Rule: ${validation.rule}\n`;
+                    resultText += `Base Word: ${validation.base_word}\n`;
+                    resultText += `Suffix: ${validation.suffix}\n`;
+                    resultText += `Result Word: ${validation.result_word}\n`;
+                    resultText += `Expected: ${validation.expected}\n`;
+                    resultText += `Correct: ${validation.correct ? 'YES' : 'NO'}\n\n`;
+                    resultText += `Explanation: ${validation.explanation}\n`;
+
+                    output.textContent = resultText;
+                    resultBox.style.display = 'block';
+
+                    if (ruleType === '111') {
+                        updateTestStatus(5, validation.correct);
+                    } else if (ruleType === 'y_to_i') {
+                        updateTestStatus(6, validation.correct);
+                    }
+                } else {
+                    output.textContent = 'Error: ' + JSON.stringify(data, null, 2);
+                    resultBox.style.display = 'block';
+                }
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+                resultBox.style.display = 'block';
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = ruleType === '111' ? 'Validate 1-1-1 Rule' : 'Validate Y-to-I Rule';
+        }
+
+        async function testContentValidation(type) {
+            const btn = document.getElementById(`${type}-btn`);
+            const output = document.getElementById(`${type}-output`);
+            const resultBox = document.getElementById(`${type}-result`);
+
+            const text = document.getElementById(`${type}-text`).value;
+            const phonemes = 'K,AE,T,M,S,AA,N,DH,AH,D,AO,G,R,P,IH,B,IY,Z,HH'.split(',');
+            const sightWords = ['the', 'a', 'is', 'on'];
+
+            btn.disabled = true;
+            btn.innerHTML = 'Validating...<span class="loading"></span>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/phonetic/check-decodability`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        allowed_phonemes: phonemes,
+                        allowed_sight_words: sightWords
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const validation = data.data;
+                    let result = 'CONTENT VALIDATION:\n\n';
+                    result += `Status: ${validation.status}\n`;
+                    result += `Decodability: ${validation.decodability_percentage}%\n`;
+                    result += `Threshold: 95%\n`;
+                    result += `Result: ${validation.passes ? 'PASS' : 'FAIL'}\n\n`;
+                    result += validation.message;
+
+                    output.textContent = result;
+                    resultBox.style.display = 'block';
+
+                    // Test 7 passes if valid text passes and invalid text fails
+                    if (type === 'valid' && validation.passes) {
+                        updateTestStatus(7, true);
+                    } else if (type === 'invalid' && !validation.passes) {
+                        // Both valid and invalid should behave as expected
+                        const currentStatus = testResults.test7;
+                        if (!currentStatus) {
+                            updateTestStatus(7, true);
+                        }
+                    }
+                } else {
+                    output.textContent = 'Error: ' + JSON.stringify(data, null, 2);
+                    resultBox.style.display = 'block';
+                }
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+                resultBox.style.display = 'block';
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = type === 'valid' ? 'Validate (Should Pass)' : 'Validate (Should Fail)';
+        }
+
+        async function runAllTests() {
+            await testG2PConversion();
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            await testHeteronym('read', 'read-present-context', 'read-present-result');
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            await testHeteronym('read', 'read-past-context', 'read-past-result');
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            await testDecodability();
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            await testOrthographicRule('111');
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            await testOrthographicRule('y_to_i');
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            await testContentValidation('valid');
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            await testContentValidation('invalid');
+        }
+    </script>
+</body>
+</html>

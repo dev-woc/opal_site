@@ -16,3 +16,9 @@ openai
 chromadb
 sentence-transformers
 numpy
+
+# Phonetic Verification Dependencies
+# Note: For production, add NVIDIA NeMo for G2P-Conformer model
+# nemo_toolkit[asr]
+# cmudict (CMU Pronouncing Dictionary)
+# For now, using built-in dictionaries and rule-based conversion

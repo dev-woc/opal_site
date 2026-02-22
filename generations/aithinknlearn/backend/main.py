@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 from backend.orchestrator import MultiAgentOrchestrator
 from backend.rag import VectorDatabase, PedagogicalRulesRetriever, ConstraintValidator
+from backend.phonetic import G2PConverter, DecodabilityChecker, OrthographicRuleEngine, HeteronymHandler
 
 # Load environment variables
 load_dotenv()
@@ -45,6 +46,12 @@ app.add_middleware(
 orchestrator = None
 rag_retriever = None
 constraint_validator = None
+
+# Initialize phonetic verification system
+g2p_converter = None
+decodability_checker = None
+orthographic_engine = None
+heteronym_handler = None
 
 
 # Request/Response Models
@@ -90,10 +97,35 @@ class ConstraintValidationRequest(BaseModel):
     allowed_sight_words: Optional[List[str]] = None
 
 
+# Phonetic Verification Request Models
+class G2PConversionRequest(BaseModel):
+    words: List[str]
+    context: Optional[str] = None
+
+
+class HeteronymAnalysisRequest(BaseModel):
+    word: str
+    context: Optional[str] = None
+
+
+class DecodabilityRequest(BaseModel):
+    text: str
+    allowed_phonemes: List[str]
+    allowed_sight_words: Optional[List[str]] = None
+
+
+class OrthographicRuleRequest(BaseModel):
+    base_word: str
+    suffix: str
+    result_word: str
+    rule_type: Optional[str] = "auto"  # "111", "y_to_i", "silent_e", "auto"
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize the orchestrator and RAG system on startup"""
     global orchestrator, rag_retriever, constraint_validator
+    global g2p_converter, decodability_checker, orthographic_engine, heteronym_handler
     logger.info("Starting Multi-Agent Orchestration System")
 
     api_key = os.getenv("OPENAI_API_KEY")
@@ -108,6 +140,14 @@ async def startup_event():
     rag_retriever = PedagogicalRulesRetriever()
     constraint_validator = ConstraintValidator()
     logger.info("RAG system initialized successfully")
+
+    # Initialize phonetic verification system
+    logger.info("Initializing Phonetic Verification System")
+    g2p_converter = G2PConverter()
+    decodability_checker = DecodabilityChecker()
+    orthographic_engine = OrthographicRuleEngine()
+    heteronym_handler = HeteronymHandler()
+    logger.info("Phonetic Verification System initialized successfully")
 
 
 @app.get("/")
@@ -513,6 +553,191 @@ async def get_rag_stats() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Error getting RAG stats: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Phonetic Verification Endpoints
+
+@app.post("/api/phonetic/g2p-convert")
+async def convert_g2p(request: G2PConversionRequest) -> Dict[str, Any]:
+    """
+    Convert words to phoneme sequences using G2P
+
+    Args:
+        request: Words to convert and optional context
+
+    Returns:
+        Phoneme conversions for each word
+    """
+    if g2p_converter is None:
+        raise HTTPException(status_code=500, detail="G2P converter not initialized")
+
+    try:
+        logger.info(f"Converting {len(request.words)} words to phonemes")
+
+        results = {}
+        for word in request.words:
+            phonemes = g2p_converter.convert(word, context=request.context)
+            breakdown = g2p_converter.get_phoneme_breakdown(word)
+            results[word] = breakdown
+
+        return {
+            "success": True,
+            "data": {
+                "conversions": results,
+                "count": len(results)
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error converting to phonemes: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/phonetic/analyze-heteronym")
+async def analyze_heteronym(request: HeteronymAnalysisRequest) -> Dict[str, Any]:
+    """
+    Analyze heteronym with context-based disambiguation
+
+    Args:
+        request: Word and optional context
+
+    Returns:
+        Heteronym analysis with all variants
+    """
+    if heteronym_handler is None:
+        raise HTTPException(status_code=500, detail="Heteronym handler not initialized")
+
+    try:
+        logger.info(f"Analyzing heteronym: {request.word}")
+
+        analysis = heteronym_handler.analyze_heteronym(request.word, request.context)
+
+        return {
+            "success": True,
+            "data": analysis
+        }
+
+    except Exception as e:
+        logger.error(f"Error analyzing heteronym: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/phonetic/check-decodability")
+async def check_decodability(request: DecodabilityRequest) -> Dict[str, Any]:
+    """
+    Check text decodability against allowed phonemes
+
+    Args:
+        request: Text, allowed phonemes, and optional sight words
+
+    Returns:
+        Decodability analysis with pass/fail status
+    """
+    if decodability_checker is None or g2p_converter is None:
+        raise HTTPException(status_code=500, detail="Decodability system not initialized")
+
+    try:
+        logger.info(f"Checking decodability of text ({len(request.text)} chars)")
+
+        validation = decodability_checker.validate_content(
+            text=request.text,
+            allowed_phonemes=request.allowed_phonemes,
+            allowed_sight_words=request.allowed_sight_words,
+            g2p_converter=g2p_converter
+        )
+
+        return {
+            "success": True,
+            "data": validation
+        }
+
+    except Exception as e:
+        logger.error(f"Error checking decodability: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/phonetic/validate-orthographic")
+async def validate_orthographic(request: OrthographicRuleRequest) -> Dict[str, Any]:
+    """
+    Validate orthographic rule application
+
+    Args:
+        request: Base word, suffix, result, and rule type
+
+    Returns:
+        Orthographic rule validation
+    """
+    if orthographic_engine is None:
+        raise HTTPException(status_code=500, detail="Orthographic engine not initialized")
+
+    try:
+        logger.info(f"Validating orthographic rule: {request.base_word} + {request.suffix}")
+
+        if request.rule_type == "auto":
+            result = orthographic_engine.validate_word_formation(
+                base_word=request.base_word,
+                suffix=request.suffix,
+                result_word=request.result_word
+            )
+        elif request.rule_type == "111":
+            result = orthographic_engine.validate_111_rule(
+                base_word=request.base_word,
+                suffix=request.suffix,
+                result_word=request.result_word
+            )
+        elif request.rule_type == "y_to_i":
+            result = orthographic_engine.validate_y_to_i_rule(
+                base_word=request.base_word,
+                suffix=request.suffix,
+                result_word=request.result_word
+            )
+        elif request.rule_type == "silent_e":
+            result = orthographic_engine.validate_silent_e_rule(
+                base_word=request.base_word,
+                suffix=request.suffix,
+                result_word=request.result_word
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown rule type: {request.rule_type}")
+
+        return {
+            "success": True,
+            "data": result
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error validating orthographic rule: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/phonetic/stats")
+async def get_phonetic_stats() -> Dict[str, Any]:
+    """
+    Get phonetic verification system statistics
+
+    Returns:
+        Statistics about the phonetic system
+    """
+    if g2p_converter is None or heteronym_handler is None:
+        raise HTTPException(status_code=500, detail="Phonetic system not initialized")
+
+    try:
+        return {
+            "success": True,
+            "data": {
+                "g2p_dictionary_size": len(g2p_converter.cmu_dict),
+                "known_heteronyms": len(heteronym_handler.heteronyms),
+                "decodability_threshold": decodability_checker.decodability_threshold,
+                "decodability_threshold_percentage": decodability_checker.decodability_threshold * 100,
+                "system_status": "operational"
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting phonetic stats: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
