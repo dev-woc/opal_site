@@ -7,8 +7,9 @@ Diagnostic Specialist) using CrewAI, with shared scratchpad for unified state ma
 
 import logging
 from typing import Dict, List, Any, Optional
+import os
 from crewai import Crew, Process
-from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 
 from backend.scratchpad import SharedScratchpad, AgentType
 from backend.agents import (
@@ -33,37 +34,25 @@ class MultiAgentOrchestrator:
     All agents share a unified scratchpad for state management and decision logging.
     """
 
-    def __init__(self, openai_api_key: Optional[str] = None):
-        """
-        Initialize the Multi-Agent Orchestrator
-
-        Args:
-            openai_api_key: OpenAI API key (optional, can use environment variable)
-        """
+    def __init__(self):
+        """Initialize the Multi-Agent Orchestrator using Ollama."""
         logger.info("Initializing Multi-Agent Orchestrator")
 
         # Initialize shared scratchpad
         self.scratchpad = SharedScratchpad()
         logger.info("Shared scratchpad initialized")
 
-        # Initialize LLM - check for API key
-        import os
-        api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        # Initialize LLM via Ollama
+        # Configure with OLLAMA_BASE_URL and OLLAMA_MODEL env vars
+        base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        model = os.getenv("OLLAMA_MODEL", "llama3.2")
+        logger.info(f"Connecting to Ollama at {base_url} with model '{model}'")
 
-        if api_key:
-            self.llm = ChatOpenAI(
-                model="gpt-4o-mini",
-                temperature=0.7,
-                api_key=api_key
-            )
-        else:
-            # For testing without API key, use a mock configuration
-            logger.warning("No OPENAI_API_KEY found. System will run in structure-test mode.")
-            self.llm = ChatOpenAI(
-                model="gpt-4o-mini",
-                temperature=0.7,
-                api_key="sk-test-mock-key-for-structure-testing"
-            )
+        self.llm = ChatOllama(
+            model=model,
+            base_url=base_url,
+            temperature=0.7,
+        )
 
         # Initialize agents
         self.curriculum_planner = CurriculumPlannerAgent(

@@ -5,12 +5,11 @@ fastapi
 uvicorn
 httpx
 
-# Multi-Agent Orchestration (disabled - requires OpenAI)
-# crewai
-# langchain
-# langchain-openai
-# langchain-community
-# openai
+# Multi-Agent Orchestration (Ollama-powered, no API key needed)
+crewai
+langchain
+langchain-community
+langchain-ollama
 
 # RAG System Dependencies
 chromadb>=1.0.0

@@ -185,17 +185,13 @@ async def startup_event():
     global word_card_gen, syllable_card_gen, sound_mapping_gen, canva_client
     logger.info("Starting Multi-Agent Orchestration System")
 
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or api_key.startswith("sk-test"):
-        logger.warning("OPENAI_API_KEY not found or is test key. Agent functionality will be limited.")
+    try:
+        orchestrator = MultiAgentOrchestrator()
+        logger.info("Orchestrator initialized successfully (Ollama)")
+    except Exception as e:
+        logger.error(f"Failed to initialize orchestrator: {e}")
+        logger.warning("Set OLLAMA_BASE_URL and OLLAMA_MODEL env vars to enable agent features.")
         orchestrator = None
-    else:
-        try:
-            orchestrator = MultiAgentOrchestrator(openai_api_key=api_key)
-            logger.info("Orchestrator initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize orchestrator: {e}")
-            orchestrator = None
 
     # Initialize RAG system
     try:

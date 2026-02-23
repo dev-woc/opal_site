@@ -9,7 +9,7 @@ UFLI Foundations, FCRR).
 import logging
 from typing import Dict, List, Any, Optional
 from crewai import Agent, Task, Crew
-from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class CurriculumPlannerAgent:
     - Integrate Wilson/OG/UFLI/FCRR methodologies
     """
 
-    def __init__(self, scratchpad, llm: Optional[ChatOpenAI] = None):
+    def __init__(self, scratchpad, llm: Optional[ChatOllama] = None):
         """
         Initialize the Curriculum Planner Agent
 
@@ -33,8 +33,13 @@ class CurriculumPlannerAgent:
             scratchpad: Shared scratchpad for state management
             llm: Language model for agent reasoning (optional)
         """
+        import os
         self.scratchpad = scratchpad
-        self.llm = llm or ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
+        self.llm = llm or ChatOllama(
+            model=os.getenv("OLLAMA_MODEL", "llama3.2"),
+            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+            temperature=0.7,
+        )
 
         # Create the CrewAI agent
         self.agent = Agent(
