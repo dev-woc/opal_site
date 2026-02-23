@@ -1,16 +1,16 @@
-# Multi-Agent Orchestration Dependencies
-crewai
-langchain
-langchain-openai
-langchain-community
+# Core server dependencies
 python-dotenv
 pydantic
 fastapi
 uvicorn
-pytest
-pytest-asyncio
 httpx
-openai
+
+# Multi-Agent Orchestration (disabled - requires OpenAI)
+# crewai
+# langchain
+# langchain-openai
+# langchain-community
+# openai
 
 # RAG System Dependencies
 chromadb>=1.0.0
