@@ -1,0 +1,145 @@
+{
+  "initialized": true,
+  "created_at": "2026-02-22T00:00:00Z",
+  "project_id": "ALPA-1",
+  "project_name": "Agentic Literacy Pipeline App",
+  "project_slug": "agentic-literacy-pipeline-app",
+  "team_key": "ALPA",
+  "meta_issue_id": "ALPA-6",
+  "total_issues": 5,
+  "session": 1,
+  "features": [
+    {
+      "issue_id": "ALPA-1",
+      "title": "Multi-Agent Orchestration - Curriculum Planning & Narrative Generation",
+      "status": "Done",
+      "priority": "urgent",
+      "description": "Implement multi-agent system with three specialized agents: Curriculum Planner, Narrative Architect, and Diagnostic Specialist. These agents work together to decompose learning objectives into structured lesson plans, generate engaging stories using strictly allowed phonemes, and analyze student errors to suggest prescriptive teaching focuses. All agents share a scratchpad/conversation history for unified state management.",
+      "implementation_requirements": [
+        "Set up LangChain or CrewAI orchestration framework",
+        "Implement Curriculum Planner agent to decompose objectives",
+        "Implement Narrative Architect agent (GPT-4o with Lexial databases)",
+        "Implement Diagnostic Specialist agent for error analysis",
+        "Create shared scratchpad/conversation history system",
+        "Establish inter-agent communication patterns"
+      ],
+      "test_steps": [
+        "Initialize orchestration system with three agents",
+        "Provide sample learning objectives",
+        "Verify Curriculum Planner decomposes into lesson plan",
+        "Verify Narrative Architect generates story with allowed phonemes",
+        "Provide sample student error data to Diagnostic Specialist",
+        "Confirm shared scratchpad maintains conversation history",
+        "Verify all agents can access and update shared state"
+      ]
+    },
+    {
+      "issue_id": "ALPA-2",
+      "title": "RAG-Powered Pedagogical Grounding - Knowledge Retrieval System",
+      "status": "Done",
+      "priority": "urgent",
+      "description": "Implement Retrieval-Augmented Generation (RAG) system to ground outputs in validated science. System must retrieve specific rules from Structured Literacy documentation (Wilson Reading System, Orton-Gillingham, UFLI Foundations, FCRR) rather than relying on broad LLM knowledge. Pulls required word lists and activity data directly from FCRR resource database.",
+      "implementation_requirements": [
+        "Set up vector database for RAG embeddings",
+        "Ingest Structured Literacy documentation (Wilson/OG/UFLI rules)",
+        "Create FCRR resource database integration",
+        "Implement retrieval logic with relevance scoring",
+        "Configure GPT-4o with strict RAG constraints",
+        "Create fallback mechanisms for missing knowledge",
+        "Implement caching for frequently retrieved rules"
+      ],
+      "test_steps": [
+        "Query RAG system for specific phonics rules",
+        "Verify retrieved content matches Structured Literacy sources",
+        "Test word list retrieval from FCRR database",
+        "Verify GPT-4o respects RAG constraints",
+        "Test retrieval with edge-case literacy patterns",
+        "Confirm system doesn't generate content outside knowledge base",
+        "Benchmark retrieval latency and accuracy"
+      ]
+    },
+    {
+      "issue_id": "ALPA-3",
+      "title": "Automated Phonetic Verification - G2P & Decodability Engine",
+      "status": "Todo",
+      "priority": "urgent",
+      "description": "Implement automated phonetic verification system using Grapheme-to-Phoneme (G2P) conversion via NVIDIA NeMo (G2P-Conformer) and CMU Pronouncing Dictionary. System must distinguish heteronyms by decomposing every word into constituent phonemes, maintain a 95% decodability rate to prevent students from guessing, and enforce orthographic rules (1-1-1 doubling rule, Y-to-I changes, etc.).",
+      "implementation_requirements": [
+        "Integrate NVIDIA NeMo G2P-Conformer model",
+        "Integrate CMU Pronouncing Dictionary",
+        "Implement phoneme decomposition logic",
+        "Build heteronym disambiguation system",
+        "Create 95% decodability validator",
+        "Implement orthographic rule engine (1-1-1 doubling, Y-to-I, etc.)",
+        "Add text analysis pipeline for content validation"
+      ],
+      "test_steps": [
+        "Convert sample words to phoneme sequences",
+        "Verify heteronym distinction (e.g., read/read)",
+        "Test phoneme validation against student reading level",
+        "Run decodability check on generated content",
+        "Verify 95% decodability rate is maintained",
+        "Test orthographic rule enforcement",
+        "Validate against edge-case phonetic patterns"
+      ]
+    },
+    {
+      "issue_id": "ALPA-4",
+      "title": "Digital Interactivity & Gamification - UI & Mobile Features",
+      "status": "Todo",
+      "priority": "high",
+      "description": "Implement interactive digital interface with virtual blending boards, Text-to-Speech feedback, mobile haptic features, and adaptive gamification. Virtual blending boards allow students to drag letter tiles with TTS auditory feedback. Mobile haptic tapping provides subtle vibrations for multisensory sound segmenting. Adaptive gamification loops adjust difficulty in real-time with multisyllabic 'boss levels'.",
+      "implementation_requirements": [
+        "Design and implement virtual blending board UI component",
+        "Integrate high-quality Text-to-Speech system",
+        "Implement letter tile dragging mechanics",
+        "Add mobile haptic vibration support",
+        "Create adaptive difficulty algorithms",
+        "Build gamification progression system",
+        "Design multisyllabic 'boss level' challenges",
+        "Ensure FCRR color-coded activity structure (Purple/Orange/Green)"
+      ],
+      "test_steps": [
+        "Navigate to blending board interface",
+        "Drag letter tiles and verify TTS feedback",
+        "Test mobile haptic vibrations",
+        "Complete basic level and verify difficulty adjustment",
+        "Reach 'boss level' and verify multisyllabic challenge",
+        "Verify color-coding matches FCRR structure",
+        "Test accessibility features (text enlargement, high contrast)"
+      ]
+    },
+    {
+      "issue_id": "ALPA-5",
+      "title": "Programmatic Print Generation - PDF & Worksheet Automation",
+      "status": "Todo",
+      "priority": "high",
+      "description": "Automate print production to support handwriting practice (encoding) and reduce screen fatigue. System uses ReportLab for pixel-precise layout of word cards, syllable cards, and sound mapping boxes. Interfaces with Canva API to suggest layouts and generate visually engaging worksheet templates. Print materials support multi-modal accessibility with automatic text enlargement, increased line spacing, and high-contrast modes.",
+      "implementation_requirements": [
+        "Set up ReportLab for PDF generation",
+        "Integrate Canva API for layout suggestions",
+        "Build word card generation system",
+        "Build syllable card generation system",
+        "Build sound mapping box system",
+        "Implement print material accessibility (text size, spacing, contrast)",
+        "Create template system for worksheet layouts",
+        "Add batch generation capabilities"
+      ],
+      "test_steps": [
+        "Generate word card PDF with sample content",
+        "Generate syllable card PDF with phonetic breakdown",
+        "Generate sound mapping worksheet",
+        "Verify pixel-precise layout accuracy",
+        "Test Canva API integration for layout suggestions",
+        "Generate print materials with accessibility features",
+        "Batch generate multiple worksheets",
+        "Verify print quality and legibility"
+      ]
+    }
+  ],
+  "meta_issue_details": {
+    "issue_id": "ALPA-6",
+    "title": "[META] Project Progress Tracker",
+    "description": "Tracking session progress for orchestrated implementation of Agentic Literacy Pipeline App"
+  }
+}
