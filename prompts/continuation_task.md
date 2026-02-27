@@ -9,6 +9,9 @@ This is a CONTINUATION session. The project has already been initialized.
 - Read `.linear_project.json` for project IDs (including meta_issue_id)
 
 ### Step 2: Get Status from Linear (CHECK FOR COMPLETION)
+
+**CRITICAL: You MUST delegate to the `linear` agent here, even if the local .linear_project.json already shows project_status: COMPLETE. The local JSON is just a cache — Linear is the source of truth.**
+
 Delegate to `linear` agent:
 "Read .linear_project.json, then:
 1. If project_id or meta_issue_id is PENDING_LINEAR_CREATION, resolve them first using project_slug (see your 'Checking Status' instructions for handling PENDING IDs — use GetProject with the slug, then find or create the META issue)

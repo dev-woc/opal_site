@@ -1,54 +1,135 @@
-# Pomodoro Timer App
+Here is the application specification formatted exactly to your provided template, including rigorous citations from the provided source document.
 
-A minimal, beautiful pomodoro timer web app.
+# Agentic Literacy Pipeline App
+
+An agentic pipeline designed to synthesize Wilson Reading System (WRS), Orton-Gillingham (OG), UFLI Foundations, and FCRR into a cohesive system for generating interactive digital and high-fidelity print materials. 
 
 ## Tech Stack
-- Frontend: Vanilla HTML/CSS/JavaScript (single page)
-- No backend required
-- Local storage for persistence
+
+* Orchestration: LangChain or CrewAI 
+
+
+* Generation: GPT-4o with strict RAG constraints, Lexial databases 
+
+
+* Phonetic Auditing: NVIDIA NeMo (G2P-Conformer), CMU Pronouncing Dictionary 
+
+
+* Print & Layout: Python (ReportLab, WeasyPrint), Canva API, MagicSchool 
+
+
 
 ## Features (5 total)
 
-### 1. Timer Display
-- Large, centered countdown timer (25:00 format)
-- Visual progress ring around the timer
-- Clean, minimal design with good typography
+### 1. Multi-Agent Orchestration
 
-### 2. Timer Controls
-- Start/Pause button
-- Reset button
-- Skip to next session button
+* "Curriculum Planner" decomposes learning objectives into structured lesson plans. 
 
-### 3. Session Types
-- Work session: 25 minutes (default)
-- Short break: 5 minutes
-- Long break: 15 minutes (after 4 work sessions)
-- Auto-switch between sessions
 
-### 4. Session Counter
-- Track completed pomodoros today
-- Visual indicator (dots or circles)
-- Persist count in localStorage
+* "Narrative Architect" generates engaging stories using strictly allowed phonemes. 
 
-### 5. Audio Notification
-- Play a gentle sound when timer completes
-- Use Web Audio API or simple audio element
+
+* "Diagnostic Specialist" analyzes student errors to suggest prescriptive teaching focuses. 
+
+
+* Agents share a "scratchpad" or conversation history for unified state management. 
+
+
+
+### 2. RAG-Powered Pedagogical Grounding
+
+* Uses Retrieval-Augmented Generation (RAG) to ensure outputs are grounded in validated science. 
+
+
+* Retrieves specific rules from Structured Literacy documentation rather than relying on broad LLM knowledge. 
+
+
+* Pulls required word lists and activity data directly from the FCRR resource database. 
+
+
+
+### 3. Automated Phonetic Verification
+
+* Translates text into phonetic representations using Grapheme-to-Phoneme (G2P) conversion. 
+
+
+* Distinguishes heteronyms by decomposing every word into constituent phonemes. 
+
+
+* Maintains a 95% decodability rate to prevent students from guessing or using cueing systems. 
+
+
+* Enforces orthographic rules, validating transformations like the 1-1-1 doubling rule or Y-to-I changes. 
+
+
+
+### 4. Digital Interactivity & Gamification
+
+* Virtual blending boards where students drag letter tiles and receive high-quality Text-to-Speech (TTS) auditory feedback. 
+
+
+* Mobile haptic tapping that provides subtle vibrations to replicate multisensory sound segmenting. 
+
+
+* Adaptive gamification loops that adjust difficulty in real-time, such as triggering multisyllabic "boss levels". 
+
+
+
+### 5. Programmatic Print Generation
+
+* Automates print production to support handwriting practice (encoding) and reduce screen fatigue. 
+
+
+* Utilizes ReportLab for pixel-precise layout of word cards, syllable cards, and sound mapping boxes. 
+
+
+* Interfaces with Canva's API to suggest layouts and generate visually engaging worksheet templates. 
+
+
 
 ## Design Guidelines
-- Dark theme with accent color (tomato red #ff6347)
-- Centered layout, works on mobile
-- Smooth animations for state changes
-- No external dependencies (pure vanilla)
+
+* Provide specific, instant feedback (e.g., identifying exact phonetic errors) rather than generic prompts. 
+
+
+* Incorporate multi-modal cues including visuals, audio, and interactive tasks. 
+
+
+* Ensure multi-modal accessibility by automatically enlarging text, increasing line spacing, or providing high-contrast modes for severe dyslexia. 
+
+
+* Utilize the FCRR color-coded structure for activities (e.g., Purple for Phonological Awareness, Orange for Phonics, Green for Vocabulary). 
+
+
 
 ## File Structure
-```
-index.html      - Single HTML file with embedded CSS/JS
-audio/ding.mp3  - Notification sound (or use Web Audio API)
+
+```text
+app/
+├── agents/
+│   ├── planner.py        # Curriculum Planner logic
+│   ├── architect.py      # Narrative Architect (GPT-4o + Lexial)
+│   ├── auditor.py        # Phonetic Auditor (NeMo G2P)
+│   ├── engineer.py       # Activity Engineer
+│   └── diagnostic.py     # Diagnostic Specialist
+├── retrieval/
+│   └── vector_db/        # RAG embeddings (Wilson/OG/UFLI rules)
+├── generation/
+│   ├── digital_ui/       # Virtual blending boards & TTS/Haptics
+│   └── print_scripts/    # ReportLab & WeasyPrint PDF generators
+└── main.py               # LangChain/CrewAI orchestration core
+
 ```
 
 ## Success Criteria
-- Timer counts down accurately
-- Sessions auto-advance
-- State persists across page refresh
-- Works on mobile browsers
-- Looks polished and professional
+
+* Texts successfully maintain a strict 95% decodability rate. 
+
+
+* The system is fully observable, logging every AI decision (like target word selection or font size) for teacher review. 
+
+
+* Reduces the educator "prompting gap" through "Flipped Interaction" patterns via simple drop-down menus. 
+
+
+* Small instructional AI teams (under 7 agents) operate without conflicting assumptions.
