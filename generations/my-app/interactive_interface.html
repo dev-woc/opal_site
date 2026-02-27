@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Blending Board - ALPA-4</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        /* FCRR Color-Coded Activity Levels */
+        .activity-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .activity-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .activity-btn.purple {
+            background: #9b59b6;
+        }
+
+        .activity-btn.orange {
+            background: #e67e22;
+        }
+
+        .activity-btn.green {
+            background: #27ae60;
+        }
+
+        .activity-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .activity-btn.active {
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.5);
+        }
+
+        /* Game HUD */
+        .game-hud {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 30px;
+            background: #ecf0f1;
+            border-bottom: 3px solid #bdc3c7;
+        }
+
+        .hud-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hud-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+
+        .hud-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 20px;
+            background: #bdc3c7;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.5s ease;
+        }
+
+        /* Main Game Area */
+        .game-area {
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .level-indicator {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .level-badge.boss {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            animation: pulse-boss 2s infinite;
+        }
+
+        @keyframes pulse-boss {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Target Word Display */
+        .target-word-display {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .target-label {
+            font-size: 1.1em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .target-word {
+            font-size: 3em;
+            font-weight: bold;
+            color: #2c3e50;
+            letter-spacing: 0.1em;
+        }
+
+        .speak-btn {
+            margin-top: 15px;
+            padding: 10px 25px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .speak-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .speak-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Blending Board */
+        .blending-board {
+            background: #fff;
+            border: 4px solid #3498db;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 0 auto 30px;
+            max-width: 800px;
+        }
+
+        .drop-zone {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            min-height: 120px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 8px;
+            border: 3px dashed #bdc3c7;
+            align-items: center;
+        }
+
+        .drop-zone.drag-over {
+            background: #d5f4e6;
+            border-color: #27ae60;
+        }
+
+        .drop-slot {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border: 3px solid #3498db;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            font-weight: bold;
+            color: #2c3e50;
+            transition: all 0.3s;
+        }
+
+        .drop-slot.filled {
+            background: #3498db;
+            color: white;
+        }
+
+        .drop-slot.correct {
+            background: #27ae60;
+            color: white;
+            animation: bounce 0.5s;
+        }
+
+        .drop-slot.incorrect {
+            background: #e74c3c;
+            color: white;
+            animation: shake 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Letter Tiles */
+        .letter-tiles {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .letter-tile {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            cursor: grab;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            user-select: none;
+        }
+
+        .letter-tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .letter-tile:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .letter-tile.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .letter-tile.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .action-btn.check {
+            background: #27ae60;
+        }
+
+        .action-btn.reset {
+            background: #e67e22;
+        }
+
+        .action-btn.skip {
+            background: #95a5a6;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Feedback Modal */
+        .feedback-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            z-index: 1000;
+            text-align: center;
+            min-width: 400px;
+        }
+
+        .feedback-modal.show {
+            display: block;
+            animation: modalSlideIn 0.5s;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .feedback-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .feedback-message {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .feedback-details {
+            font-size: 1.1em;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+
+        .continue-btn {
+            padding: 15px 40px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .continue-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        /* Overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        /* Accessibility Controls */
+        .accessibility-controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .accessibility-btn {
+            padding: 10px 20px;
+            background: #34495e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .accessibility-btn:hover {
+            background: #2c3e50;
+        }
+
+        .accessibility-btn.active {
+            background: #3498db;
+        }
+
+        /* High Contrast Mode */
+        body.high-contrast {
+            filter: contrast(1.5);
+        }
+
+        /* Large Text Mode */
+        body.large-text .target-word {
+            font-size: 4em;
+        }
+
+        body.large-text .letter-tile {
+            font-size: 3em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Interactive Blending Board</h1>
+            <p>Digital Interactivity & Gamification - ALPA-4</p>
+        </header>
+
+        <!-- FCRR Activity Level Selector -->
+        <div class="activity-selector">
+            <button class="activity-btn purple active" data-level="phonological">
+                Purple - Phonological Awareness
+            </button>
+            <button class="activity-btn orange" data-level="phonics">
+                Orange - Phonics
+            </button>
+            <button class="activity-btn green" data-level="fluency">
+                Green - Fluency
+            </button>
+        </div>
+
+        <!-- Game HUD -->
+        <div class="game-hud">
+            <div class="hud-item">
+                <span class="hud-label">Level</span>
+                <span class="hud-value" id="current-level">1</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">Score</span>
+                <span class="hud-value" id="current-score">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">Streak</span>
+                <span class="hud-value" id="current-streak">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">Progress</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="game-area">
+            <div class="level-indicator">
+                <span class="level-badge" id="level-badge">Level 1: CVC Words</span>
+            </div>
+
+            <!-- Target Word Display -->
+            <div class="target-word-display">
+                <div class="target-label">Build this word:</div>
+                <div class="target-word" id="target-word">CAT</div>
+                <button class="speak-btn" id="speak-btn" aria-label="Speak word">🔊 Say Word</button>
+            </div>
+
+            <!-- Blending Board -->
+            <div class="blending-board">
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-slot" data-index="0"></div>
+                    <div class="drop-slot" data-index="1"></div>
+                    <div class="drop-slot" data-index="2"></div>
+                </div>
+            </div>
+
+            <!-- Letter Tiles -->
+            <div class="letter-tiles" id="letter-tiles">
+                <!-- Dynamically generated -->
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn check" id="check-btn">✓ Check Answer</button>
+                <button class="action-btn reset" id="reset-btn">↻ Reset</button>
+                <button class="action-btn skip" id="skip-btn">→ Skip</button>
+            </div>
+        </div>
+
+        <!-- Accessibility Controls -->
+        <div class="accessibility-controls">
+            <button class="accessibility-btn" id="large-text-btn">Large Text</button>
+            <button class="accessibility-btn" id="high-contrast-btn">High Contrast</button>
+            <button class="accessibility-btn" id="haptic-btn">Haptic Feedback</button>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="overlay" id="overlay"></div>
+    <div class="feedback-modal" id="feedback-modal">
+        <div class="feedback-icon" id="feedback-icon">🎉</div>
+        <div class="feedback-message" id="feedback-message">Great job!</div>
+        <div class="feedback-details" id="feedback-details">You spelled "CAT" correctly!</div>
+        <button class="continue-btn" id="continue-btn">Continue</button>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentLevel: 1,
+            score: 0,
+            streak: 0,
+            progress: 0,
+            activityLevel: 'phonological',
+            difficulty: 1,
+            hapticEnabled: false,
+            currentWord: '',
+            currentLetters: [],
+            placedLetters: [null, null, null],
+            isBossLevel: false
+        };
+
+        // Word Lists by Difficulty
+        const wordLists = {
+            1: ['cat', 'dog', 'mat', 'hat', 'bat', 'rat', 'sat', 'fat'],
+            2: ['ship', 'shop', 'chat', 'chip', 'thin', 'that', 'fish', 'wish'],
+            3: ['black', 'plant', 'clock', 'trash', 'click', 'grass'],
+            4: ['button', 'rabbit', 'kitten', 'happen', 'pattern'], // Boss level - multisyllabic
+        };
+
+        // Initialize game
+        function initGame() {
+            loadNewWord();
+            setupEventListeners();
+            updateHUD();
+        }
+
+        // Load new word
+        function loadNewWord() {
+            const difficulty = gameState.isBossLevel ? 4 : Math.min(3, Math.ceil(gameState.currentLevel / 3));
+            const words = wordLists[difficulty];
+            gameState.currentWord = words[Math.floor(Math.random() * words.length)];
+
+            // Generate letter tiles (target letters + distractors)
+            const targetLetters = gameState.currentWord.toUpperCase().split('');
+            const distractorLetters = generateDistractors(targetLetters);
+            gameState.currentLetters = shuffleArray([...targetLetters, ...distractorLetters]);
+
+            // Update UI
+            document.getElementById('target-word').textContent = gameState.currentWord.toUpperCase();
+            renderLetterTiles();
+            resetDropZone();
+
+            // Update level badge
+            if (gameState.isBossLevel) {
+                document.getElementById('level-badge').textContent = '🏆 BOSS LEVEL: Multisyllabic Challenge';
+                document.getElementById('level-badge').classList.add('boss');
+            } else {
+                document.getElementById('level-badge').textContent = `Level ${gameState.currentLevel}`;
+                document.getElementById('level-badge').classList.remove('boss');
+            }
+
+            // Adjust drop zone slots based on word length
+            const dropZone = document.getElementById('drop-zone');
+            dropZone.innerHTML = '';
+            for (let i = 0; i < gameState.currentWord.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'drop-slot';
+                slot.dataset.index = i;
+                dropZone.appendChild(slot);
+            }
+            gameState.placedLetters = new Array(gameState.currentWord.length).fill(null);
+        }
+
+        // Generate distractor letters
+        function generateDistractors(targetLetters) {
+            const allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            const distractors = [];
+            while (distractors.length < 3) {
+                const letter = allLetters[Math.floor(Math.random() * allLetters.length)];
+                if (!targetLetters.includes(letter) && !distractors.includes(letter)) {
+                    distractors.push(letter);
+                }
+            }
+            return distractors;
+        }
+
+        // Shuffle array
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Render letter tiles
+        function renderLetterTiles() {
+            const container = document.getElementById('letter-tiles');
+            container.innerHTML = '';
+
+            gameState.currentLetters.forEach((letter, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'letter-tile';
+                tile.textContent = letter;
+                tile.draggable = true;
+                tile.dataset.letter = letter;
+                tile.dataset.index = index;
+
+                // Drag events
+                tile.addEventListener('dragstart', handleDragStart);
+                tile.addEventListener('dragend', handleDragEnd);
+
+                // Touch events for mobile
+                tile.addEventListener('touchstart', handleTouchStart);
+                tile.addEventListener('touchmove', handleTouchMove);
+                tile.addEventListener('touchend', handleTouchEnd);
+
+                container.appendChild(tile);
+            });
+        }
+
+        // Reset drop zone
+        function resetDropZone() {
+            document.querySelectorAll('.drop-slot').forEach(slot => {
+                slot.textContent = '';
+                slot.className = 'drop-slot';
+            });
+            gameState.placedLetters = new Array(gameState.currentWord.length).fill(null);
+
+            // Re-enable all tiles
+            document.querySelectorAll('.letter-tile').forEach(tile => {
+                tile.classList.remove('used');
+                tile.draggable = true;
+            });
+        }
+
+        // Drag and Drop handlers
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', e.target.dataset.letter);
+
+            // Haptic feedback
+            if (gameState.hapticEnabled && navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedElement = null;
+        }
+
+        // Touch event handlers for mobile
+        let touchedElement = null;
+        let touchOffsetX = 0;
+        let touchOffsetY = 0;
+
+        function handleTouchStart(e) {
+            touchedElement = e.target;
+            const touch = e.touches[0];
+            const rect = e.target.getBoundingClientRect();
+            touchOffsetX = touch.clientX - rect.left;
+            touchOffsetY = touch.clientY - rect.top;
+            e.target.classList.add('dragging');
+
+            // Haptic feedback
+            if (gameState.hapticEnabled && navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (!touchedElement) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchedElement.style.position = 'fixed';
+            touchedElement.style.left = (touch.clientX - touchOffsetX) + 'px';
+            touchedElement.style.top = (touch.clientY - touchOffsetY) + 'px';
+            touchedElement.style.zIndex = '1000';
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchedElement) return;
+
+            const touch = e.changedTouches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+            touchedElement.style.position = '';
+            touchedElement.style.left = '';
+            touchedElement.style.top = '';
+            touchedElement.style.zIndex = '';
+            touchedElement.classList.remove('dragging');
+
+            if (element && element.classList.contains('drop-slot')) {
+                const index = parseInt(element.dataset.index);
+                placeLetter(touchedElement.dataset.letter, index);
+                touchedElement.classList.add('used');
+                touchedElement.draggable = false;
+
+                // Haptic feedback
+                if (gameState.hapticEnabled && navigator.vibrate) {
+                    navigator.vibrate(20);
+                }
+            }
+
+            touchedElement = null;
+        }
+
+        // Setup drop zone listeners
+        document.getElementById('drop-zone').addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (e.target.classList.contains('drop-slot')) {
+                e.target.style.background = '#d5f4e6';
+            }
+        });
+
+        document.getElementById('drop-zone').addEventListener('dragleave', (e) => {
+            if (e.target.classList.contains('drop-slot')) {
+                e.target.style.background = '';
+            }
+        });
+
+        document.getElementById('drop-zone').addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (e.target.classList.contains('drop-slot')) {
+                e.target.style.background = '';
+                const letter = e.dataTransfer.getData('text/plain');
+                const index = parseInt(e.target.dataset.index);
+                placeLetter(letter, index);
+
+                if (draggedElement) {
+                    draggedElement.classList.add('used');
+                    draggedElement.draggable = false;
+                }
+
+                // Haptic feedback
+                if (gameState.hapticEnabled && navigator.vibrate) {
+                    navigator.vibrate(20);
+                }
+            }
+        });
+
+        // Place letter in slot
+        function placeLetter(letter, index) {
+            const slot = document.querySelector(`.drop-slot[data-index="${index}"]`);
+            slot.textContent = letter;
+            slot.classList.add('filled');
+            gameState.placedLetters[index] = letter;
+
+            // Text-to-Speech for letter
+            speak(letter);
+        }
+
+        // Text-to-Speech function
+        function speak(text, rate = 1) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = rate;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Check answer
+        function checkAnswer() {
+            const userWord = gameState.placedLetters.join('').toLowerCase();
+            const isCorrect = userWord === gameState.currentWord;
+
+            // Visual feedback on slots
+            document.querySelectorAll('.drop-slot').forEach((slot, index) => {
+                if (gameState.placedLetters[index]) {
+                    slot.classList.add(isCorrect ? 'correct' : 'incorrect');
+                }
+            });
+
+            // Haptic feedback
+            if (gameState.hapticEnabled && navigator.vibrate) {
+                if (isCorrect) {
+                    navigator.vibrate([50, 50, 50]);
+                } else {
+                    navigator.vibrate(100);
+                }
+            }
+
+            setTimeout(() => {
+                showFeedback(isCorrect);
+            }, 1000);
+        }
+
+        // Show feedback modal
+        function showFeedback(isCorrect) {
+            const modal = document.getElementById('feedback-modal');
+            const overlay = document.getElementById('overlay');
+            const icon = document.getElementById('feedback-icon');
+            const message = document.getElementById('feedback-message');
+            const details = document.getElementById('feedback-details');
+
+            if (isCorrect) {
+                icon.textContent = '🎉';
+                message.textContent = 'Excellent!';
+                details.textContent = `You spelled "${gameState.currentWord.toUpperCase()}" correctly!`;
+
+                // Update score
+                gameState.score += 10 * gameState.difficulty;
+                gameState.streak++;
+                gameState.progress += 10;
+
+                // Check for level up
+                if (gameState.progress >= 100) {
+                    gameState.currentLevel++;
+                    gameState.progress = 0;
+
+                    // Boss level every 5 levels
+                    if (gameState.currentLevel % 5 === 0) {
+                        gameState.isBossLevel = true;
+                    }
+                }
+
+                // Adaptive difficulty
+                if (gameState.streak >= 3) {
+                    gameState.difficulty = Math.min(3, gameState.difficulty + 1);
+                }
+
+                speak('Correct!');
+            } else {
+                icon.textContent = '😅';
+                message.textContent = 'Not quite!';
+                details.textContent = `The correct spelling is "${gameState.currentWord.toUpperCase()}". Try again!`;
+
+                gameState.streak = 0;
+                gameState.difficulty = Math.max(1, gameState.difficulty - 1);
+
+                speak('Try again!');
+            }
+
+            updateHUD();
+            modal.classList.add('show');
+            overlay.classList.add('show');
+        }
+
+        // Hide feedback modal
+        function hideFeedback() {
+            document.getElementById('feedback-modal').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
+
+            // After boss level, return to normal
+            if (gameState.isBossLevel) {
+                gameState.isBossLevel = false;
+            }
+
+            loadNewWord();
+        }
+
+        // Update HUD
+        function updateHUD() {
+            document.getElementById('current-level').textContent = gameState.currentLevel;
+            document.getElementById('current-score').textContent = gameState.score;
+            document.getElementById('current-streak').textContent = gameState.streak;
+            document.getElementById('progress-fill').style.width = gameState.progress + '%';
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Speak button
+            document.getElementById('speak-btn').addEventListener('click', () => {
+                speak(gameState.currentWord, 0.8);
+                if (gameState.hapticEnabled && navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            });
+
+            // Check button
+            document.getElementById('check-btn').addEventListener('click', () => {
+                if (gameState.placedLetters.every(l => l !== null)) {
+                    checkAnswer();
+                }
+            });
+
+            // Reset button
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                resetDropZone();
+                if (gameState.hapticEnabled && navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            });
+
+            // Skip button
+            document.getElementById('skip-btn').addEventListener('click', () => {
+                loadNewWord();
+                if (gameState.hapticEnabled && navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            });
+
+            // Continue button
+            document.getElementById('continue-btn').addEventListener('click', hideFeedback);
+
+            // Activity level buttons
+            document.querySelectorAll('.activity-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    gameState.activityLevel = e.target.dataset.level;
+
+                    // Reset game for new activity level
+                    gameState.currentLevel = 1;
+                    gameState.progress = 0;
+                    loadNewWord();
+                    updateHUD();
+                });
+            });
+
+            // Accessibility controls
+            document.getElementById('large-text-btn').addEventListener('click', (e) => {
+                document.body.classList.toggle('large-text');
+                e.target.classList.toggle('active');
+            });
+
+            document.getElementById('high-contrast-btn').addEventListener('click', (e) => {
+                document.body.classList.toggle('high-contrast');
+                e.target.classList.toggle('active');
+            });
+
+            document.getElementById('haptic-btn').addEventListener('click', (e) => {
+                gameState.hapticEnabled = !gameState.hapticEnabled;
+                e.target.classList.toggle('active');
+
+                // Test haptic
+                if (gameState.hapticEnabled && navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
